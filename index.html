@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0B3D2E">
+  <meta http-equiv="Content-Security-Policy" content="
+default-src 'self';
+script-src 'self' https://www.gstatic.com https://esm.sh;
+style-src 'self' 'unsafe-inline';
+img-src 'self' data: https:;
+connect-src 'self' 
+  https://*.googleapis.com 
+  https://*.firebaseio.com 
+  https://*.gstatic.com 
+  https://firestore.googleapis.com 
+  https://identitytoolkit.googleapis.com 
+  https://securetoken.googleapis.com;
+font-src 'self' https://fonts.gstatic.com;
+frame-src 'self' https://*.firebaseapp.com https://accounts.google.com;
+worker-src 'self';
+base-uri 'self';
+form-action 'self' https://wa.me;
+">
+<link rel="manifest" href="/manifest.json">
+  <title>ES Shop</title>
+
+<script type="module" src="js/index.js" defer></script>
+<script src="js/ui.js" defer></script>
+<script src="js/nav.js" defer></script>
+<script src="js/pwa.js" defer></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+
+    body { background: #F5F5F5; color: #111; }
+
+    header {
+      background: #0B3D2E;
+      color: white;
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header .status { font-size: 12px; color: #D4AF37; }
+
+    .search-bar {
+      padding: 10px;
+      position: sticky;
+      top: 0;
+      background: #F5F5F5;
+      z-index: 10;
+    }
+
+    .search-bar input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      background: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .products {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      padding: 10px;
+    }
+
+    .product {
+      position: relative;
+      background: white;
+      padding: 12px;
+      border-radius: 12px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+      cursor: pointer;
+      transition: 0.2s;
+      overflow: hidden;
+      min-height: 100px;
+    }
+
+    .product:active { transform: scale(0.95); }
+
+    /* IMAGE BACKGROUND */
+    .product::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      opacity: 0.15;
+      z-index: 0;
+    }
+
+    .product-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .product h4 { font-size: 14px; }
+    .product p { font-size: 12px; color: gray; }
+
+    .variant {
+      font-size: 11px;
+      color: #555;
+    }
+
+    .cart {
+      position: fixed;
+      bottom: 70px;
+      left: 0;
+      width: 100%;
+      background: white;
+      padding: 10px;
+      box-shadow: 0 -3px 10px rgba(0,0,0,0.1);
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      margin-bottom: 5px;
+      flex-wrap: nowrap;
+    }
+    
+    .cart-item span {
+      white-space: nowrap;
+    }
+
+    .cart-item button {
+      background: red;
+      border: none;
+      color: white;
+      border-radius: 4px;
+      padding: 2px 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .total { font-weight: bold; margin-top: 5px; }
+
+    .sell-btn {
+      width: 100%;
+      padding: 12px;
+      background: #0B3D2E;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      margin-top: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .cart-price-input {
+  width: 23%;
+}
+
+    .sell-btn:active { transform: scale(0.97); }
+
+    nav {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: #111;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      color: white;
+      z-index: 1000;
+    }
+
+    nav div {
+      text-align: center;
+      font-size: 12px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    nav div:hover,
+    nav div.active {
+      color: #D4AF37;
+      font-weight: bold;
+    }
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(10px);
+      transition: 0.4s;
+    }
+
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .custom-date {
+      display: flex;
+      align-items: center;
+      margin-top: 5px;
+      gap: 5px;
+      font-size: 12px;
+    }
+
+    .custom-date input[type="date"] {
+      padding: 4px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 12px;
+    }
+    
+    /* espace pour éviter blocage */
+.products {
+  padding-bottom: 240px;
+}
+
+/* animation panier */
+.cart {
+  transition: transform 0.3s ease;
+}
+
+/* état réduit */
+.cart.hidden {
+  transform: translateY(85%);
+}
+
+/* bouton toggle */
+#toggleCart {
+  position: fixed;
+  bottom: calc(60px + 220px + 5px); /* panier bottom + panier max-height + 10px de marge */
+  right: 15px;
+  width: 30px;      /* un peu plus petit */
+  height: 30px;     /* idem */
+  font-size: 10px;  /* réduire icône */
+  background: #0B3D2E;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 1100;
+}
+#splash {
+  position: fixed;
+  inset: 0;
+  background-color: #111; /* noir */
+  background-image: url("./home.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+  #splash.hide {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  #installBtn {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    background: #0B3D2E;
+    color: white;
+    border: none;
+    padding: 12px 14px;
+    border-radius: 10px;
+    z-index: 9999;
+    font-weight: bold;
+  }
+
+  #installBtn:active {
+    transform: scale(0.95);
+  }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h3>ES Shop</h3>
+  <div class="status" id="stats">● Online</div>
+  <button id="installBtn" hidden>
+  Installer l’application
+</button>
+</header>
+<div id="splash"></div>
+<div class="search-bar">
+  <input type="text" placeholder="Rechercher un produit..." id="searchInput">
+</div>
+
+<!-- PRODUITS -->
+<section class="products" id="productsContainer"></section>
+
+<!-- PANIER -->
+<div class="cart">
+
+  <!-- items injectés JS -->
+
+  <div class="custom-date">
+    <input type="checkbox" id="manualDate">
+    <label for="manualDate">Modifier date vente</label>
+    <input type="date" id="saleDate" disabled>
+  </div>
+  
+  <div class="payment-box">
+  <input type="text" id="clientName" placeholder="Nom client (optionnel)">
+  
+  <select id="paymentType">
+    <option value="full">Paiement total</option>
+    <option value="partial">Paiement partiel (dette)</option>
+  </select>
+
+  <input type="number" id="amountPaid" placeholder="Montant payé" style="display:none;">
+</div>
+
+  <div class="total">Total: 0fc</div>
+
+  <button class="sell-btn">VENDRE</button>
+</div>
+<button id="toggleCart">🛒</button>
+<!-- NAV -->
+<nav>
+  <div class="nav-item active" data-page="index.html">🛒 Vente rapide</div>
+  <div class="nav-item" data-page="products.html">📦 Produits</div>
+  <div class="nav-item" data-page="stats.html">📊 Stats</div>
+  <div class="nav-item" data-page="settings.html">⚙️ Paramètres</div>
+  <div class="nav-item" data-page="purchases.html">📥 Achats</div>
+  <div class="nav-item" data-page="losses.html">❌ Pertes</div>
+</nav>
+
+</body>
+</html>

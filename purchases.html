@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="
+default-src 'self';
+script-src 'self' https://www.gstatic.com https://esm.sh;
+style-src 'self' 'unsafe-inline';
+img-src 'self' data: https:;
+connect-src 'self' 
+  https://*.googleapis.com 
+  https://*.firebaseio.com 
+  https://*.gstatic.com 
+  https://firestore.googleapis.com 
+  https://identitytoolkit.googleapis.com 
+  https://securetoken.googleapis.com;
+font-src 'self' https://fonts.gstatic.com;
+frame-src 'self' https://*.firebaseapp.com https://accounts.google.com;
+worker-src 'self';
+base-uri 'self';
+form-action 'self' https://wa.me;
+">
+  <title>Stock Achats fournisseurs</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    nav {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: #111;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      color: white;
+      z-index: 1000;
+    }
+    nav div {
+      text-align: center;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    nav div.active {
+      color: #D4AF37;
+      font-weight: bold;
+    }
+    header {
+      background: #0B3D2E;
+      color: white;
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header .status { font-size: 12px; color: #D4AF37; }
+
+    .search-bar {
+      padding: 10px;
+      position: sticky;
+      top: 0;
+      background: #F5F5F5;
+      z-index: 10;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding-bottom: 70px;
+      background: #f5f6fa;
+    }
+
+    h2 {
+      text-align: center;
+      margin-top: 20px;
+    }
+.commande {
+  width: 95%;
+  margin: 15px auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.commande button {
+  padding: 8px 12px;
+  background: #0B3D2E;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+    form {
+      max-width: 500px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    form input, form select {
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    form button {
+      padding: 10px;
+      background: #192a56;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    table {
+      width: 95%;
+      margin: 20px auto;
+      border-collapse: collapse;
+      background: #fff;
+    }
+
+    table th, table td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
+    }
+
+    table th {
+      background: #192a56;
+      color: white;
+    }
+    .search-box {
+  width: 95%;
+  margin: 10px auto;
+}
+
+.search-box input {
+  width: 90%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.filtre {
+  width: 95%;
+  margin: 10px auto;
+  display: flex;
+  justify-content: flex-end;
+}
+
+#stockFilter {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  width: 150px;
+}
+
+#debug{
+  position:fixed;
+  left:50%;
+  bottom:20px;
+  transform:translateX(-50%);
+  z-index:999999;
+
+  max-width:90%;
+  min-width:220px;
+
+  padding:12px 16px;
+
+  border-radius:12px;
+
+  background:#111;
+  color:#fff;
+
+  font-size:13px;
+  font-weight:600;
+
+  text-align:center;
+
+  opacity:0;
+  pointer-events:none;
+
+  transition:opacity .25s ease;
+}
+
+#debug.show{
+  opacity:1;
+}
+  </style>
+</head>
+<body>
+<header>
+  <h3>StockFlow</h3>
+  <div class="status" id="stats">● Online</div>
+</header>
+
+<div id="debug"></div>
+
+<nav>
+  <div class="nav-item" data-page="index.html">🛒 Vente rapide</div>
+  <div class="nav-item" data-page="products.html">📦 Produits</div>
+  <div class="nav-item" data-page="stats.html">📊 Stats</div>
+  <div class="nav-item" data-page="settings.html">⚙️ Paramètres</div>
+  <div class="nav-item active" data-page="purchases.html">📥 Achats</div>
+  <div class="nav-item" data-page="losses.html">❌ Pertes</div>
+</nav>
+
+<div class="commande">
+<h2>Ajouter une commande fournisseur</h2>
+<button>➕ Ajouter achat</button>
+</div>
+<form id="purchaseForm" style="display:none;">
+
+  <label>Fournisseur :</label>
+  <input type="text" id="supplierName" required>
+
+  <label>Produit :</label>
+  <select id="productSelect" required>
+    <option value="">-- Sélectionner --</option>
+  </select>
+
+  <input type="text" id="productName" placeholder="Nouveau produit" style="display:none;">
+
+  <label>Quantité :</label>
+  <input type="number" id="quantity" min="1" required>
+
+  <label>Prix unitaire (si ≠ ancien) :</label>
+  <input type="number" id="unitPrice" min="0.01" step="0.01">
+
+  <button type="submit">Ajouter commande</button>
+</form>
+
+<div class="filtre">
+<select id="stockFilter">
+  <option value="all">Tous</option>
+  <option value="low">Stock faible</option>
+</select>
+</div>
+<div class="search-box">
+  <input type="text" id="stockSearch" placeholder="Rechercher produit...">
+</div>
+
+<h2>Stock actuel</h2>
+
+<table id="stockTable">
+  <thead>
+    <tr>
+      <th>Produit</th>
+      <th>Stock</th>
+      <th>Prix</th>
+      <th>Total</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script type="module" src="js/purchases.js"></script>
+
+<script>
+document.querySelectorAll('nav .nav-item').forEach(item => {
+  item.addEventListener('click', () => location.href = item.dataset.page);
+});
+
+</script>
+
+</body>
+</html>
