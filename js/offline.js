@@ -108,9 +108,9 @@ export function setupNetworkListeners(onBackOnline = null) {
 
 export function updateNetworkBadge(isOnline) {
 
-  const stats = document.getElementById("stats");
+  const status = document.getElementById("status");
 
-  if (!stats) return;
+  if (!status) return;
 
   stats.textContent = isOnline
     ? "● Online"
@@ -138,16 +138,39 @@ export function showOfflineWarning() {
     "⚠️ Mode hors ligne actif. Évitez plusieurs caisses simultanément.";
 
   div.style.position = "fixed";
-  div.style.left = "10px";
-  div.style.right = "10px";
-  div.style.bottom = "10px";
-  div.style.padding = "12px";
-  div.style.background = "#f39c12";
-  div.style.color = "#111";
-  div.style.fontSize = "14px";
-  div.style.borderRadius = "10px";
-  div.style.zIndex = "99999";
-  div.style.fontWeight = "bold";
+
+div.style.top = "0";
+div.style.left = "0";
+div.style.right = "0";
+
+div.style.height = "4px";
+
+div.style.background =
+  "linear-gradient(90deg,#f39c12,#ffd166,#f39c12)";
+
+div.style.boxShadow =
+  "0 0 12px rgba(243,156,18,0.7)";
+
+div.style.zIndex = "99999";
+
+div.style.pointerEvents = "none";
+
+div.style.opacity = "1";
+
+div.style.transition =
+  "opacity 0.3s ease";
+
+div.animate(
+  [
+    { opacity: 0.35 },
+    { opacity: 1 },
+    { opacity: 0.35 }
+  ],
+  {
+    duration: 1200,
+    iterations: Infinity
+  }
+);
 
   document.body.appendChild(div);
 
