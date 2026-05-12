@@ -112,11 +112,11 @@ export function updateNetworkBadge(isOnline) {
 
   if (!status) return;
 
-  stats.textContent = isOnline
+  status.textContent = isOnline
     ? "● Online"
     : "● Offline";
 
-  stats.style.color = isOnline
+  status.style.color = isOnline
     ? "green"
     : "red";
 
