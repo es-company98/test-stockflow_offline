@@ -1,8 +1,13 @@
 const CACHE_NAME = "stockflow-v1";
 
-// ⚡ assets core (offline shell)
+/* =========================
+   CORE OFFLINE FILES
+========================= */
+
 const CORE_ASSETS = [
+
   "/",
+
   "/index.html",
   "/products.html",
   "/purchases.html",
@@ -12,12 +17,13 @@ const CORE_ASSETS = [
   "/login.html",
   "/help.html",
   "/settings.html",
+  "/ranging.html",
 
   "/js/index.js",
   "/js/ui.js",
   "/js/nav.js",
   "/js/pwa.js",
-  "/js/receipt.js.js",
+  "/js/receipt.js",
   "/js/products.js",
   "/js/purchases.js",
   "/js/stats.js",
@@ -25,85 +31,257 @@ const CORE_ASSETS = [
   "/js/pages.js",
   "/js/login.js",
   "/js/settings.js",
-  
-
+  "/js/ranging.js",
   "/js/firebase.js"
+
 ];
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(CORE_ASSETS);
-    })
-  );
+/* =========================
+   INSTALL
+========================= */
 
-  self.skipWaiting(); // active direct
-});
+self.addEventListener(
+  "install",
+  (event) => {
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      )
-    )
-  );
+    event.waitUntil(
 
-  self.clients.claim();
-});
+      caches.open(CACHE_NAME)
+        .then(async (cache) => {
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      )
-    )
-  );
+          for (const asset of CORE_ASSETS) {
 
-  self.clients.claim();
-});
+            try {
 
-self.addEventListener("fetch", (event) => {
-  const request = event.request;
+              await cache.add(asset);
 
-  // API Firebase → jamais cache (important)
-  if (request.url.includes("firebase") || request.url.includes("googleapis")) {
-    event.respondWith(fetch(request));
-    return;
-  }
+              console.log(
+                "✅ Cached:",
+                asset
+              );
 
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      return (
-        cached ||
-        fetch(request).then((response) => {
-          // update cache dynamique
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, clone);
-          });
-          return response;
+            } catch (err) {
+
+              console.error(
+                "❌ Cache failed:",
+                asset,
+                err
+              );
+
+            }
+
+          }
+
         })
+
+    );
+
+    self.skipWaiting();
+
+  }
+);
+
+/* =========================
+   ACTIVATE
+========================= */
+
+self.addEventListener(
+  "activate",
+  (event) => {
+
+    event.waitUntil(
+
+      caches.keys()
+        .then((keys) => {
+
+          return Promise.all(
+
+            keys
+              .filter(
+                (key) =>
+                  key !== CACHE_NAME
+              )
+              .map(
+                (key) =>
+                  caches.delete(key)
+              )
+
+          );
+
+        })
+
+    );
+
+    self.clients.claim();
+
+  }
+);
+
+/* =========================
+   FETCH
+========================= */
+
+self.addEventListener(
+  "fetch",
+  (event) => {
+
+    const request =
+      event.request;
+
+    /* ---------- Ignore non-GET ---------- */
+
+    if (
+      request.method !== "GET"
+    ) {
+      return;
+    }
+
+    /* ---------- Firebase ---------- */
+
+    if (
+
+      request.url.includes(
+        "firebase"
+      ) ||
+
+      request.url.includes(
+        "googleapis"
+      )
+
+    ) {
+
+      event.respondWith(
+
+        fetch(request)
+          .catch(() => {
+
+            return new Response(
+              null,
+              {
+                status: 503,
+                statusText:
+                  "Offline"
+              }
+            );
+
+          })
+
       );
-    })
+
+      return;
+
+    }
+
+    /* ---------- Cache First ---------- */
+
+    event.respondWith(
+
+      caches.match(request)
+        .then((cached) => {
+
+          if (cached) {
+            return cached;
+          }
+
+          return fetch(request)
+
+            .then((response) => {
+
+              if (
+                !response ||
+                !response.ok
+              ) {
+                return response;
+              }
+
+              const clone =
+                response.clone();
+
+              caches.open(
+                CACHE_NAME
+              )
+              .then((cache) => {
+
+                cache.put(
+                  request,
+                  clone
+                );
+
+              });
+
+              return response;
+
+            })
+
+            .catch(async () => {
+
+              const offlinePage =
+                await caches.match(
+                  "/index.html"
+                );
+
+              return (
+                offlinePage ||
+
+                new Response(
+                  "Offline",
+                  {
+                    status: 503,
+                    headers: {
+                      "Content-Type":
+                        "text/plain"
+                    }
+                  }
+                )
+
+              );
+
+            });
+
+        })
+
+    );
+
+  }
+);
+
+/* =========================
+   SW REGISTER
+========================= */
+
+if (
+  typeof window !== "undefined" &&
+  "serviceWorker" in navigator
+) {
+
+  window.addEventListener(
+    "load",
+    () => {
+
+      navigator.serviceWorker
+        .register(
+          "/service-worker.js"
+        )
+
+        .then((reg) => {
+
+          console.log(
+            "✅ SW OK:",
+            reg.scope
+          );
+
+        })
+
+        .catch((err) => {
+
+          console.error(
+            "❌ SW FAIL:",
+            err
+          );
+
+        });
+
+    }
   );
-});
 
-
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js")
-      .then((reg) => {
-        console.log("SW OK:", reg.scope);
-      })
-      .catch((err) => {
-        console.error("SW FAIL:", err);
-      });
-  });
 }
-
