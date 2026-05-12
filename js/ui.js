@@ -16,3 +16,11 @@ cartDom.addEventListener('click', () => {
 toggleCartBtn.addEventListener('click', () => {
   cartDom.classList.toggle('hidden');
 });
+
+  // DATE TOGGLE
+  const manualDateCheckbox = document.getElementById('manualDate');
+  const saleDateInput = document.getElementById('saleDate');
+
+  manualDateCheckbox.addEventListener('change', () => {
+    saleDateInput.disabled = !manualDateCheckbox.checked;
+  });
