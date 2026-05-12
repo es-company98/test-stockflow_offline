@@ -615,7 +615,7 @@ async function processSaleOnline(data) {
         quantity: item.qty,
         reason: "sale",
         referenceId: saleRef.id,
-        createdBy: userId,
+        createdBy: finalSellerId,
         createdAt: Timestamp.fromMillis(saleDate)
       });
     }
