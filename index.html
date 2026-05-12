@@ -7,6 +7,7 @@
   <meta http-equiv="Content-Security-Policy" content="
 default-src 'self';
 script-src 'self' https://www.gstatic.com https://esm.sh;
+script-src 'self' 'unsafe-eval' https://www.gstatic.com https://esm.sh;
 style-src 'self' 'unsafe-inline';
 img-src 'self' data: https:;
 connect-src 'self' 
@@ -23,12 +24,11 @@ base-uri 'self';
 form-action 'self' https://wa.me;
 ">
 <link rel="manifest" href="/manifest.json">
-  <title>ES Shop</title>
+  <title>StockFlow</title>
 
 <script type="module" src="js/index.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/nav.js" defer></script>
-<script src="js/pwa.js" defer></script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
@@ -295,7 +295,7 @@ nav .nav-item.active {
 <body>
 
 <header>
-  <h3>ES Shop</h3>
+  <h3>StockFlow - vente</h3>
   <div class="status" id="status">● Online</div>
   <button id="installBtn" hidden>
   Installer l’application
@@ -367,6 +367,8 @@ nav .nav-item.active {
      data-page="stats.html">
      📊 Stats
   </a>
+
 </nav>
+
 </body>
   </html>
