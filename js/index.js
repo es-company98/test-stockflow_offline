@@ -461,43 +461,41 @@ function computePayment(totalAmount, paymentMode, inputAmount) {
     hasDebt: amount_remaining > 0
   };
 }
+
 // --- onLine ---
 async function processSaleOnline(data) {
 
   const {
-  cart,
-  userId,
-  sellerId,
-  payment,
-  saleDate,
-  totalAmount,
-  totalProfit,
-  offlineActionId,
-  deviceId
-} = data;
+    cart,
+    userId,
+    sellerId,
+    payment,
+    saleDate,
+    totalAmount,
+    totalProfit,
+    offlineActionId,
+    deviceId
+  } = data;
 
-const finalSellerId = sellerId || userId;
+  const finalSellerId = sellerId || userId;
 
-  const saleRef = doc(collection(db,"sales"));
-  
+  const saleRef = doc(collection(db, "sales"));
+
+  // 🔒 anti double sync offline
   if (offlineActionId) {
 
-  const q = query(
-    collection(db, "sales"),
-    where("offlineActionId", "==", offlineActionId)
-  );
+    const q = query(
+      collection(db, "sales"),
+      where("offlineActionId", "==", offlineActionId)
+    );
 
-  const existing = await getDocs(q);
+    const existing = await getDocs(q);
 
-  if (!existing.empty) {
-
-    alert("⚠️ Vente déjà synchronisée");
-
-    return;
-
+    if (!existing.empty) {
+      alert("⚠️ Vente déjà synchronisée");
+      return null;
+    }
   }
-
-}
 
   await runTransaction(db, async (tx) => {
 
@@ -526,45 +524,45 @@ const finalSellerId = sellerId || userId;
       total_amount: totalAmount,
       total_profit: totalProfit,
       offlineActionId: offlineActionId || null,
-deviceId: deviceId || null,
-syncSource: offlineActionId ? "offline-sync" : "online",
+      deviceId: deviceId || null,
+      syncSource: offlineActionId ? "offline-sync" : "online",
       status: "active",
       ...payment,
       createdAt: Timestamp.fromMillis(saleDate)
     });
 
-    // 3. ITEMS
+    // 3. ITEMS + MOVEMENTS
     for (const item of cart) {
 
       const itemRef = doc(collection(db, "sale_items"));
 
-tx.set(itemRef, {
-  saleId: saleRef.id,
-  productId: item.productId,
-  quantity: item.qty,
-  price: item.price,
-  price_min: item.price_min,
-  profit: (item.price - item.price_buy) * item.qty,
-  createdAt: Timestamp.fromMillis(saleDate)
-});
+      tx.set(itemRef, {
+        saleId: saleRef.id,
+        productId: item.productId,
+        quantity: item.qty,
+        price: item.price,
+        price_min: item.price_min,
+        profit: (item.price - item.price_buy) * item.qty,
+        createdAt: Timestamp.fromMillis(saleDate)
+      });
 
-const movementRef = doc(collection(db, "stock_movements"));
+      const movementRef = doc(collection(db, "stock_movements"));
 
-tx.set(movementRef, {
-  productId: item.productId,
-  type: "OUT",
-  quantity: item.qty,
-  reason: "sale",
-  referenceId: saleRef.id,
-  createdBy: userId,
-  createdAt: Timestamp.fromMillis(saleDate)
-});
-}
+      tx.set(movementRef, {
+        productId: item.productId,
+        type: "OUT",
+        quantity: item.qty,
+        reason: "sale",
+        referenceId: saleRef.id,
+        createdBy: userId,
+        createdAt: Timestamp.fromMillis(saleDate)
+      });
+    }
 
     // 4. DEBT
     if (payment.payment_status === "partial") {
 
-      const debtRef = doc(collection(db,"expensess"));
+      const debtRef = doc(collection(db, "expensess"));
 
       tx.set(debtRef, {
         genre: "debt",
@@ -576,9 +574,14 @@ tx.set(movementRef, {
         status: "partial",
         relatedSaleId: saleRef.id,
         createdAt: serverTimestamp()
-    });
-  }
+      });
+    }
 
+  });
+
+  // ✅ IMPORTANT : retour propre pour receipt
+  return saleRef.id;
+}
 
 // --- SELL (ANTI DOUBLE) ---
 sellBtn.addEventListener('click', async () => {
@@ -598,35 +601,34 @@ sellBtn.addEventListener('click', async () => {
 
     await checkUser(currentUserId);
 
-    // 🔥 CALCULS AVANT TOUT
-    const totalAmount = cart.reduce((a,b)=>a+b.qty*b.price,0);
-const totalProfit = cart.reduce((a,b)=>a+(b.price-b.price_buy)*b.qty,0);
+    const totalAmount = cart.reduce((a, b) => a + b.qty * b.price, 0);
+    const totalProfit = cart.reduce((a, b) => a + (b.price - b.price_buy) * b.qty, 0);
 
-const paymentMode = paymentType.value;
+    const paymentMode = paymentType.value;
 
-const payment = computePayment(
-  totalAmount,
-  paymentMode,
-  amountPaidInput.value
-);
+    const payment = computePayment(
+      totalAmount,
+      paymentMode,
+      amountPaidInput.value
+    );
 
-let saleDate;
+    let saleDate;
 
-try {
-  saleDate = getSaleDate();
-} catch (e) {
-  alert(e.message);
-  return;
-}
+    try {
+      saleDate = getSaleDate();
+    } catch (e) {
+      alert(e.message);
+      return;
+    }
 
-const payload = {
-  cart: structuredClone(cart),
-  sellerId: currentUserId,
-  payment,
-  saleDate,
-  totalAmount,
-  totalProfit
-};
+    const payload = {
+      cart: structuredClone(cart),
+      sellerId: currentUserId,
+      payment,
+      saleDate,
+      totalAmount,
+      totalProfit
+    };
 
     // 🧠 OFFLINE FIRST
     if (isOffline()) {
@@ -640,14 +642,35 @@ const payload = {
       return;
     }
 
-    // 🧠 ONLINE
-    
-    await processSaleOnline(payload);
+    // 🧠 ONLINE SALE
+    const saleId = await processSaleOnline(payload);
+
+    if (!saleId) return;
+
+    // 🧾 RECEIPT SAFE
+    try {
+      await generateReceipt({
+        saleId,
+        name: clientNameInput?.value || "Client inconnu",
+        items: cart.map(i => ({
+          name: i.name,
+          qty: i.qty,
+          price: i.price
+        })),
+        total: totalAmount,
+        amountPaid: payment.amount_paid,
+        remaining: payment.amount_remaining,
+        paymentMode: payment.payment_status,
+        date: new Date(saleDate)
+      });
+    } catch (err) {
+      console.warn("Receipt failed:", err);
+    }
 
     await syncQueue(processSaleOnline);
 
     alert("Vente OK");
-    
+
     cart = [];
     updateCartUI();
 
@@ -685,4 +708,4 @@ setupInstallButton();
 function resetPaymentUI() {
   amountPaidInput.value = "";
   amountPaidInput.style.display = "none";
-  }
+}
