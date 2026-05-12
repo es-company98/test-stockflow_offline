@@ -138,19 +138,22 @@ export function showOfflineWarning() {
   "⚠️ Mode hors ligne actif : vérifiez qu’aucune autre caisse n’effectue des ventes afin d’éviter des erreurs de stock lors de la synchronisation.";
 
    const header =
+  document.querySelector("header") ||
   document.querySelector(".header");
 
 const headerHeight =
-  header?.offsetHeight || 60;
+  header?.offsetHeight || 50;
 
 div.style.position = "fixed";
 
 div.style.top =
-  `${headerHeight + 6}px`;
+  `${headerHeight + 8}px`;
 
-div.style.left = "12px";
+div.style.left = "50%";
+div.style.transform = "translateX(-50%)";
 
-div.style.right = "12px";
+div.style.maxWidth = "420px";
+div.style.width = "calc(100% - 24px)";
 
 div.style.padding =
   "12px 16px";
@@ -166,7 +169,7 @@ div.style.fontSize = "13px";
 
 div.style.fontWeight = "700";
 
-div.style.lineHeight = "1.45";
+div.style.lineHeight = "1.4";
 
 div.style.boxShadow =
   "0 6px 18px rgba(0,0,0,0.18)";
@@ -181,30 +184,32 @@ div.style.borderLeft =
 div.style.backdropFilter =
   "blur(6px)";
 
-div.style.transition =
-  "opacity 0.25s ease";
+div.style.textAlign = "center";
 
+/* ===== BLINK CONTROLLED (VISIBLE / REPOS) ===== */
+let visible = true;
+
+setInterval(() => {
+
+  visible = !visible;
+
+  div.style.opacity = visible ? "1" : "0.75";
+
+}, 900);
+
+/* ===== MICRO FLOAT (pas agressif) ===== */
 div.animate(
   [
-    {
-      transform: "translateY(0px)",
-      opacity: 0.82
-    },
-    {
-      transform: "translateY(-2px)",
-      opacity: 1
-    },
-    {
-      transform: "translateY(0px)",
-      opacity: 0.82
-    }
+    { transform: "translateX(-50%) translateY(0px)" },
+    { transform: "translateX(-50%) translateY(-2px)" },
+    { transform: "translateX(-50%) translateY(0px)" }
   ],
   {
-    duration: 1500,
+    duration: 1800,
     iterations: Infinity
   }
 );
-
+ 
   document.body.appendChild(div);
 
   offlineBanner = div;
