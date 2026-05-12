@@ -380,7 +380,7 @@ function updateCartUI() {
 
     qtyInput.style.setProperty(
       "width",
-      "40px",
+      "38px",
       "important"
     );
 
@@ -431,7 +431,7 @@ function updateCartUI() {
 
     priceInput.style.setProperty(
       "width",
-      "60px",
+      "50px",
       "important"
     );
 
