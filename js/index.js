@@ -1,4 +1,4 @@
-//v1 index.js FINAL ULTRA PRO + ANTI DOUBLE VENTE + debts logique + manual Stock + muti seller + OFFLINE ( OK )
+//v1 index.js FINAL ULTRA PRO + ANTI DOUBLE VENTE + debts logique + manual Stock + muti seller + OFFLINE + manual quantity ( OK )
 import { 
   db, collection, addDoc, getDoc, doc, updateDoc, Timestamp, getDocs, query, where, enableIndexedDbPersistence, runTransaction, serverTimestamp
 } from './firebase.js';
@@ -145,13 +145,16 @@ async function loadProducts() {
 
 // --- RENDER ---
 function renderProducts(list) {
+
   productsContainer.replaceChildren();
 
   list.forEach(p => {
-    const div = document.createElement('div');
-    div.className = 'product fade-in';
+
+    const div = document.createElement("div");
+    div.className = "product fade-in";
 
     const img = p.imageUrl || "default.png";
+
     div.style.backgroundImage = `url(${img})`;
     div.style.backgroundSize = "cover";
     div.style.backgroundPosition = "center";
@@ -159,69 +162,67 @@ function renderProducts(list) {
     const content = document.createElement("div");
     content.className = "product-content";
 
+    // --- NAME ---
     const title = document.createElement("h4");
     title.textContent = p.name;
 
+    // --- VARIANT ---
+    const variant = document.createElement("div");
+
     if (p.variant) {
-      const variant = document.createElement("div");
+
       variant.textContent = p.variant;
+
+      variant.style.fontSize = "12px";
+      variant.style.opacity = "0.82";
+      variant.style.fontStyle = "italic";
+      variant.style.marginTop = "-4px";
+
+    }
+
+    // --- STOCK ---
+    const stock = document.createElement("p");
+
+    stock.textContent =
+      `Stock: ${p.stock_current ?? 0}`;
+
+    // --- PRICE ---
+    const price = document.createElement("p");
+
+    price.textContent =
+      `${(p.price_sell || 0).toFixed(2)} FC`;
+
+    // --- QUICK ADD ---
+    div.addEventListener("click", (e) => {
+
+      if (
+        e.target.closest("input") ||
+        e.target.closest("button")
+      ) {
+        return;
+      }
+
+      addToCart(p);
+
+    });
+
+    // --- APPEND ---
+    content.appendChild(title);
+
+    if (p.variant) {
       content.appendChild(variant);
     }
 
-    const stock = document.createElement("p");
-    stock.textContent = `Stock: ${p.stock_current ?? 0}`;
-
-    const price = document.createElement("p");
-    price.textContent = `${(p.price_sell || 0).toFixed(2)}FC`;
-
-    // 👉 INPUT QTY
-    const qtyInput = document.createElement("input");
-    qtyInput.type = "number";
-    qtyInput.min = "1";
-    qtyInput.placeholder = "Qté";
-
-    // 👉 BTN OK (manual add)
-    const okBtn = document.createElement("button");
-    okBtn.textContent = "OK";
-
-    okBtn.addEventListener("click", (e) => {
-      e.stopPropagation(); // 🔒 empêche click card
-
-      const val = Number(qtyInput.value);
-
-      if (isNaN(val) || val <= 0) {
-        alert("Quantité invalide");
-        return;
-      }
-
-      if (val > (p.stock_current || 0)) {
-        qtyInput.value = p.stock_current || 0;
-        alert(`Stock max: ${p.stock_current || 0}`);
-        return;
-      }
-
-      addToCartManual(p, val);
-      qtyInput.value = ""; // UX clean
-    });
-
-    // 👉 CLICK CARD = add rapide
-    div.addEventListener("click", (e) => {
-      // ignore si interaction avec input/button
-      if (e.target.closest("input") || e.target.closest("button")) return;
-
-      addToCart(p);
-    });
-
-    content.appendChild(title);
     content.appendChild(stock);
     content.appendChild(price);
-    content.appendChild(qtyInput);
-    content.appendChild(okBtn);
 
     div.appendChild(content);
+
     productsContainer.appendChild(div);
 
-    setTimeout(() => div.classList.add('visible'), 50);
+    requestAnimationFrame(() => {
+      div.classList.add("visible");
+    });
   });
 }
 
@@ -352,8 +353,8 @@ function removeFromCart(id) {
 function updateCartUI() {
 
   cartDom
-    .querySelectorAll('.cart-item')
-    .forEach(e => e.remove());
+    .querySelectorAll(".cart-item")
+    .forEach(el => el.remove());
 
   let total = 0;
 
@@ -361,41 +362,95 @@ function updateCartUI() {
 
     total += item.price * item.qty;
 
-    const div = document.createElement('div');
-    div.className = 'cart-item';
+    const div = document.createElement("div");
+    div.className = "cart-item";
 
-    const name = document.createElement('span');
+    const name = document.createElement("span");
     name.textContent = `${item.name} x${item.qty}`;
 
-    const controls = document.createElement('span');
+    const controls = document.createElement("span");
+    controls.className = "cart-controls";
 
-    const input = document.createElement('input');
-    input.type = "number";
-    input.value = item.price;
-    input.min = item.price_min;
+    // --- QTY INPUT ---
+    const qtyInput = document.createElement("input");
+    qtyInput.type = "number";
+    qtyInput.min = "1";
+    qtyInput.value = item.qty;
+    qtyInput.classList.add("cart-qty-input");
 
-    input.style.setProperty(
+    qtyInput.style.setProperty(
+      "width",
+      "40px",
+      "important"
+    );
+
+    const qtyOk = document.createElement("button");
+    qtyOk.textContent = "OK";
+
+    qtyOk.addEventListener("click", () => {
+
+      const val = parseInt(qtyInput.value);
+
+      if (isNaN(val) || val <= 0) {
+        alert("Qté invalide");
+        qtyInput.value = item.qty;
+        return;
+      }
+
+      const product = allProducts.find(
+        p => p.id === item.productId
+      );
+
+      if (!product) {
+        alert("Produit introuvable");
+        return;
+      }
+
+      const stockMax = product.stock_current || 0;
+
+      if (val > stockMax) {
+        alert(`Stock max: ${stockMax}`);
+        qtyInput.value = item.qty;
+        return;
+      }
+
+      item.qty = val;
+
+      updateCartUI();
+
+    });
+
+    // --- PRICE INPUT ---
+    const priceInput = document.createElement("input");
+
+    priceInput.type = "number";
+    priceInput.value = item.price;
+    priceInput.min = item.price_min;
+
+    priceInput.classList.add("cart-price-input");
+
+    priceInput.style.setProperty(
       "width",
       "60px",
       "important"
     );
 
-    input.classList.add("cart-price-input");
+    const priceOk = document.createElement("button");
+    priceOk.textContent = "OK";
 
-    const ok = document.createElement('button');
-    ok.textContent = "OK";
+    priceOk.addEventListener("click", () => {
 
-    ok.addEventListener("click", () => {
-
-      const val = parseFloat(input.value);
+      const val = parseFloat(priceInput.value);
 
       if (isNaN(val)) {
         alert("Prix invalide");
+        priceInput.value = item.price;
         return;
       }
 
       if (val < item.price_min) {
         alert(`Minimum: ${item.price_min}`);
+        priceInput.value = item.price;
         return;
       }
 
@@ -405,7 +460,8 @@ function updateCartUI() {
 
     });
 
-    const del = document.createElement('button');
+    // --- DELETE ---
+    const del = document.createElement("button");
     del.textContent = "x";
 
     del.addEventListener("click", () => {
@@ -414,8 +470,13 @@ function updateCartUI() {
 
     });
 
-    controls.appendChild(input);
-    controls.appendChild(ok);
+    // --- APPEND ---
+    controls.appendChild(qtyInput);
+    controls.appendChild(qtyOk);
+
+    controls.appendChild(priceInput);
+    controls.appendChild(priceOk);
+
     controls.appendChild(del);
 
     div.appendChild(name);
@@ -708,4 +769,5 @@ setupInstallButton();
 function resetPaymentUI() {
   amountPaidInput.value = "";
   amountPaidInput.style.display = "none";
-}
+  }
+                                            
