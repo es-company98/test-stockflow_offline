@@ -162,30 +162,59 @@ form-action 'self' https://wa.me;
 
     .sell-btn:active { transform: scale(0.97); }
 
-    nav {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      background: #111;
-      display: flex;
-      justify-content: space-around;
-      padding: 10px 0;
-      color: white;
-      z-index: 1000;
-    }
+  nav {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: #111;
 
-    nav div {
-      text-align: center;
-      font-size: 12px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 
-    nav div:hover,
-    nav div.active {
-      color: #D4AF37;
-      font-weight: bold;
-    }
+  padding: 6px 10px;
+  gap: 6px;
+
+  color: white;
+  z-index: 1000;
+
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+nav .nav-item {
+  flex: 1;
+  min-width: 0;
+
+  text-align: center;
+  font-size: 11px;
+  cursor: pointer;
+
+  padding: 6px 4px;
+  border-radius: 6px;
+
+  transition: 0.2s;
+
+  text-decoration: none;
+  color: inherit;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+nav .nav-item:hover {
+  background: rgba(212,175,55,0.08);
+}
+
+nav .nav-item.active {
+  color: #D4AF37;
+  font-weight: bold;
+  background: rgba(212,175,55,0.12);
+}
 
     .fade-in {
       opacity: 0;
@@ -243,26 +272,7 @@ form-action 'self' https://wa.me;
   cursor: pointer;
   z-index: 1100;
 }
-#splash {
-  position: fixed;
-  inset: 0;
-  background-color: #111; /* noir */
-  background-image: url("./home.png");
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;
-  z-index: 9999;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-  #splash.hide {
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-  }
   #installBtn {
     position: fixed;
     bottom: 15px;
@@ -326,13 +336,38 @@ form-action 'self' https://wa.me;
 </div>
 <button id="toggleCart">🛒</button>
 <!-- NAV -->
-<nav>
-  <div class="nav-item active" data-page="index.html">🛒 Vente rapide</div>
-  <div class="nav-item" data-page="products.html">📦 Produits</div>
-  <div class="nav-item" data-page="stats.html">📊 Stats</div>
-  <div class="nav-item" data-page="settings.html">⚙️ Paramètres</div>
-  <div class="nav-item" data-page="purchases.html">📥 Achats</div>
-  <div class="nav-item" data-page="losses.html">❌ Pertes</div>
+<nav class="bottom-nav">
+
+  <a href="index.html"
+     class="nav-item"
+     data-page="index.html">
+     🛒 Vente
+  </a>
+
+  <a href="products.html"
+     class="nav-item"
+     data-page="products.html">
+     📦 Produits
+  </a>
+
+  <a href="purchases.html"
+     class="nav-item"
+     data-page="purchases.html">
+     📥 Achats
+  </a>
+
+  <a href="expensess.html"
+     class="nav-item"
+     data-page="expensess.html">
+     💳 Dettes
+  </a>
+
+  <a href="stats.html"
+     class="nav-item"
+     data-page="stats.html">
+     📊 Stats
+  </a>
+
 </nav>
 
 </body>
