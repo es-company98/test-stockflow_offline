@@ -1,6 +1,6 @@
 //v1 index.js FINAL ULTRA PRO + ANTI DOUBLE VENTE + debts logique + manual Stock + muti seller + OFFLINE ( OK )
 import { 
-  db, collection, addDoc, getDoc, doc, updateDoc, Timestamp, getDocs, query, where, runTransaction, serverTimestamp
+  db, collection, addDoc, getDoc, doc, updateDoc, Timestamp, getDocs, query, where, enableIndexedDbPersistence, runTransaction, serverTimestamp
 } from './firebase.js';
 
 import {
@@ -37,6 +37,21 @@ const manualDateCheckbox = document.getElementById('manualDate');
 const saleDateInput = document.getElementById('saleDate');
 const searchInput = document.getElementById('searchInput');
 
+//limit sales date
+const today = new Date().toISOString().split("T")[0];
+saleDateInput.max = today;
+const now = new Date();
+saleDateInput.max = now.toISOString().split("T")[0];
+saleDateInput.min = "2026-04-31";
+// sécurité date
+saleDateInput.addEventListener("input", () => {
+  const selected = new Date(saleDateInput.value).getTime();
+
+  if (selected > Date.now()) {
+    saleDateInput.value = "";
+    alert("Date future interdite");
+  }
+});
 
 // ---- open debts input 
 function togglePaymentInput() {
@@ -73,10 +88,25 @@ let currentUserId = null;
 
 // --- date format---
 function getSaleDate() {
+
+  const now = Date.now();
+
   if (manualDateCheckbox?.checked && saleDateInput?.value) {
-    return new Date(saleDateInput.value).getTime();
+    const selected = new Date(saleDateInput.value).getTime();
+
+    // 🚫 future strict
+    if (selected > now) {
+      throw new Error("Date invalide (future)");
+    }
+
+    // 🚫 too old (option sécurité business)
+    const maxPast = now - (365 * 24 * 60 * 60 * 1000);
+    if (selected < maxPast) {
+      throw new Error("Date trop ancienne");
+    }
+    return selected;
   }
-  return Date.now();
+  return now;
 }
 
 // --- SECURITY ---
@@ -508,28 +538,28 @@ syncSource: offlineActionId ? "offline-sync" : "online",
 
       const itemRef = doc(collection(db, "sale_items"));
 
-    tx.set(itemRef, {
-        saleId: saleRef.id,
-        productId: item.productId,
-        quantity: item.qty,
-        price: item.price,
-        price_min: item.price_min,
-        profit: (item.price - item.price_buy) * item.qty,
-        createdAt: Timestamp.fromMillis(saleDate)
-      });
+tx.set(itemRef, {
+  saleId: saleRef.id,
+  productId: item.productId,
+  quantity: item.qty,
+  price: item.price,
+  price_min: item.price_min,
+  profit: (item.price - item.price_buy) * item.qty,
+  createdAt: Timestamp.fromMillis(saleDate)
+});
 
-      const itemRef = doc(collection(db, "sale_items"));
+const movementRef = doc(collection(db, "stock_movements"));
 
-    tx.set(itemRef, {
-        productId: item.productId,
-        type: "OUT",
-        quantity: item.qty,
-        reason: "sale",
-        referenceId: saleRef.id,
-        createdBy: userId,
-        createdAt: Timestamp.fromMillis(saleDate)
-      });
-    }
+tx.set(movementRef, {
+  productId: item.productId,
+  type: "OUT",
+  quantity: item.qty,
+  reason: "sale",
+  referenceId: saleRef.id,
+  createdBy: userId,
+  createdAt: Timestamp.fromMillis(saleDate)
+});
+}
 
     // 4. DEBT
     if (payment.payment_status === "partial") {
@@ -546,11 +576,8 @@ syncSource: offlineActionId ? "offline-sync" : "online",
         status: "partial",
         relatedSaleId: saleRef.id,
         createdAt: serverTimestamp()
-      });
-    }
-
-  });
-}
+    });
+  }
 
 
 // --- SELL (ANTI DOUBLE) ---
@@ -583,11 +610,20 @@ const payment = computePayment(
   amountPaidInput.value
 );
 
+let saleDate;
+
+try {
+  saleDate = getSaleDate();
+} catch (e) {
+  alert(e.message);
+  return;
+}
+
 const payload = {
   cart: structuredClone(cart),
   sellerId: currentUserId,
   payment,
-  saleDate: getSaleDate(),
+  saleDate,
   totalAmount,
   totalProfit
 };
@@ -649,4 +685,4 @@ setupInstallButton();
 function resetPaymentUI() {
   amountPaidInput.value = "";
   amountPaidInput.style.display = "none";
-}
+  }
