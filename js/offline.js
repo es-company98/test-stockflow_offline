@@ -134,40 +134,61 @@ export function showOfflineWarning() {
 
   div.setAttribute("id", "offline-banner");
 
-  div.textContent =
-    "⚠️ Mode hors ligne actif. Évitez plusieurs caisses simultanément.";
+   div.textContent =
+  "⚠️ Mode hors ligne actif : vérifiez qu’aucune autre caisse n’effectue des ventes afin d’éviter des erreurs de stock lors de la synchronisation.";
+  
+  div.style.position = "sticky";
 
-  div.style.position = "fixed";
+div.style.top = "70px";
 
-div.style.top = "0";
-div.style.left = "0";
-div.style.right = "0";
+div.style.margin = "10px";
 
-div.style.height = "4px";
+div.style.padding = "12px 16px";
 
 div.style.background =
-  "linear-gradient(90deg,#f39c12,#ffd166,#f39c12)";
+  "rgba(243,156,18,0.12)";
+
+div.style.border =
+  "1px solid rgba(243,156,18,0.45)";
+
+div.style.borderLeft =
+  "4px solid #f39c12";
+
+div.style.borderRadius = "14px";
+
+div.style.backdropFilter =
+  "blur(8px)";
+
+div.style.color = "#f39c12";
+
+div.style.fontSize = "13px";
+
+div.style.fontWeight = "700";
+
+div.style.lineHeight = "1.5";
+
+div.style.textAlign = "left";
 
 div.style.boxShadow =
-  "0 0 12px rgba(243,156,18,0.7)";
+  "0 4px 14px rgba(0,0,0,0.08)";
 
-div.style.zIndex = "99999";
+div.style.zIndex = "999";
 
 div.style.pointerEvents = "none";
-
-div.style.opacity = "1";
 
 div.style.transition =
   "opacity 0.3s ease";
 
+div.style.opacity = "1";
+
 div.animate(
   [
-    { opacity: 0.35 },
+    { opacity: 0.75 },
     { opacity: 1 },
-    { opacity: 0.35 }
+    { opacity: 0.75 }
   ],
   {
-    duration: 1200,
+    duration: 1800,
     iterations: Infinity
   }
 );
