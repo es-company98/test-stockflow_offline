@@ -1,0 +1,975 @@
+<!-- OK decorations badgets pro + update sales-->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="
+default-src 'self';
+script-src 'self' https://www.gstatic.com https://esm.sh;
+style-src 'self' 'unsafe-inline';
+img-src 'self' data: https:;
+connect-src 'self' 
+  https://*.googleapis.com 
+  https://*.firebaseio.com 
+  https://*.gstatic.com 
+  https://firestore.googleapis.com 
+  https://identitytoolkit.googleapis.com 
+  https://securetoken.googleapis.com;
+font-src 'self' https://fonts.gstatic.com;
+frame-src 'self' https://*.firebaseapp.com https://accounts.google.com;
+worker-src 'self';
+base-uri 'self';
+form-action 'self' https://wa.me;
+">
+<title>Gestion des Dépenses</title>
+
+<style>
+:root {
+  --primary:#0B5FFF;
+  --dark:#111;
+  --light:#f5f7fa;
+  --danger:#e74c3c;
+}
+
+body {
+  margin:0;
+  font-family:Arial;
+  background:var(--light);
+}
+
+/* HEADER */
+.header {
+  background:#fff;
+  padding:15px;
+  text-align:center;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* CONTAINER */
+.container {
+  max-width:900px;
+  margin:auto;
+  padding:20px;
+}
+
+/* SWITCH */
+.switch-box {
+  display:flex;
+  gap:10px;
+  margin-bottom:15px;
+}
+
+.switch-box button {
+  flex:1;
+  padding:10px;
+  border:none;
+  cursor:pointer;
+  background:#ddd;
+  border-radius:8px;
+  transition:0.2s;
+}
+
+.switch-box button.active {
+  background:var(--primary);
+  color:#fff;
+}
+
+/* FORM */
+.form-box {
+  background:#fff;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:15px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+
+.form-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+input, select, textarea {
+  padding:10px;
+  border:1px solid #ddd;
+  border-radius:8px;
+  width:90%;
+}
+
+textarea {
+  grid-column:span 2;
+}
+
+/* LIST */
+.list {
+  background:#fff;
+  padding:10px;
+  border-radius:10px;
+}
+
+/* HIDE */
+.hidden { display:none; }
+
+/* BTN */
+.btn {
+  width:100%;
+  padding:10px;
+  background:var(--primary);
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  margin-top:10px;
+  cursor:pointer;
+}
+
+/* displayed*/
+.expense-item {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px;
+  border-bottom:1px solid #eee;
+}
+
+.expense-item button {
+  padding:6px 10px;
+  border:none;
+  background:#0B5FFF;
+  color:#fff;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:12px;
+}
+
+.expense-item small {
+  display:block;
+  color:#777;
+}
+.badge {
+  font-size:11px;
+  padding:3px 6px;
+  border-radius:6px;
+  color:#fff;
+  margin-left:6px;
+}
+
+.badge-expense {
+  background: #0B5FFF; /* dépense normale = bleu */
+}
+.badge-debt {
+  background: #8e44ad; /* dette = violet */
+}
+.badge-loss {
+  background: #e74c3c; /* perte = rouge */
+}
+.badge-paid {
+  background: #27ae60; /* payé = vert */
+}
+.badge-partial {
+  background: #f39c12; /* partiel = orange */
+}
+
+/* NAV */
+nav {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: #111;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      color: white;
+      z-index: 1000;
+    }
+    nav div {
+      text-align: center;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    nav div.active {
+      color: #D4AF37;
+      font-weight: bold;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h2>💼 Expenses System</h2>
+</div>
+
+<div class="container">
+<div id="debug" style="color:red;font-size:13px"></div>
+
+<!-- SWITCH -->
+<div class="switch-box">
+  <button id="btnExpense" class="active">💸 Dépense</button>
+  <button id="btnDebt">📉 Dette</button>
+  <button id="btnLoss">❌ Perte</button>
+</div>
+
+<!-- ================= EXPENSE ================= -->
+<div id="expenseForm" class="form-box">
+  <h3>Dépense</h3>
+
+  <div class="form-grid">
+    <input type="text" id="label" placeholder="Label">
+
+    <select id="category">
+      <option value="salary">Salaire</option>
+      <option value="reinvestment">Réinvestissement</option>
+      <option value="tax">Taxe</option>
+      <option value="maintenance">Maintenance</option>
+      <option value="rent">Loyer</option>
+      <option value="other">Autre</option>
+    </select>
+
+    <input type="number" id="amount" placeholder="Montant">
+
+    <select id="type">
+      <option value="fixed">Fixe</option>
+      <option value="variable">Variable</option>
+    </select>
+
+    <input type="text" id="relatedTo" placeholder="Lié à">
+
+    <textarea id="note" placeholder="Note"></textarea>
+  </div>
+
+  <button class="btn" id="addExpenseBtn">Ajouter</button>
+</div>
+
+<!-- ================= DEBT ================= -->
+<div id="debtForm" class="form-box hidden">
+  <h3>Dette</h3>
+
+  <div class="form-grid">
+    <select id="debtType">
+      <option value="client">Client</option>
+      <option value="supplier">Fournisseur</option>
+    </select>
+
+    <input type="text" id="debtName" placeholder="Nom">
+
+    <input type="number" id="debtAmount" placeholder="Montant De dette">
+    <input type="number" id="debtPayed" placeholder="Montant Payer">
+
+    <input type="text" id="debtPhone" placeholder="Téléphone">
+
+    <input type="date" id="debtDueDate">
+
+    <textarea id="debtNote" placeholder="Note"></textarea>
+  </div>
+
+  <button class="btn" id="addDebtBtn">Créer dette</button>
+</div>
+
+<!-- ================= LOSS ================= -->
+<div id="lossForm" class="form-box hidden">
+
+  <h3>📦 Perte produit</h3>
+
+  <select id="productSelect"></select>
+  <input type="number" id="productQuantityLost" placeholder="Quantité">
+
+  <select id="productLossReason">
+    <option value="loss">Perte</option>
+    <option value="break">Casse</option>
+    <option value="stock_error">Erreur stock</option>
+  </select>
+
+  <button class="btn" id="submitProductLoss">Valider produit</button>
+
+  <hr style="margin:15px 0">
+
+  <h3>💰 Perte argent</h3>
+
+  <input type="number" id="moneyLostAmount">
+
+  <select id="moneyLossReason">
+    <option value="vol">Vol</option>
+    <option value="faux_billet">Faux billet</option>
+    <option value="erreur_caisse">Erreur caisse</option>
+    <option value="other">Autre</option>
+  </select>
+
+  <button class="btn" id="submitMoneyLoss">Valider argent</button>
+</div>
+
+<!-- FILTERS -->
+<div class="form-box">
+  <input type="text" id="searchInput" placeholder="🔍 recherche...">
+
+  <select id="filterCategory">
+    <option value="all">Tout</option>
+    <option value="salary">Salaire</option>
+    <option value="tax">Taxe</option>
+    <option value="maintenance">Maintenance</option>
+    <option value="rent">Loyer</option>
+    <option value="other">Autre</option>
+  </select>
+
+  <input type="date" id="startDate">
+  <input type="date" id="endDate">
+</div>
+
+<!-- LIST -->
+<div class="list" id="expensesList"></div>
+
+</div>
+
+<br><br>
+<!-- NAV -->
+<nav>
+  <div class="nav-item" data-page="index.html">🛒 Vente rapide</div>
+  <div class="nav-item" data-page="products.html">📦 Produits</div>
+  <div class="nav-item" data-page="stats.html">📊 Stats</div>
+  <div class="nav-item" data-page="pages.html">🌐 Navigation</div> 
+  <div class="nav-item active" data-page="losses.html">❌ Pertes</div>
+</nav>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  const buttons = {
+    expense: document.getElementById("btnExpense"),
+    debt: document.getElementById("btnDebt"),
+    loss: document.getElementById("btnLoss"),
+  };
+
+  const forms = {
+    expense: document.getElementById("expenseForm"),
+    debt: document.getElementById("debtForm"),
+    loss: document.getElementById("lossForm"),
+  };
+
+  function showForm(type) {
+    Object.values(forms).forEach(f => f.classList.add("hidden"));
+    Object.values(buttons).forEach(b => b.classList.remove("active"));
+
+    forms[type].classList.remove("hidden");
+    buttons[type].classList.add("active");
+  }
+
+  // ✅ UNE SEULE MÉTHODE → addEventListener
+  buttons.expense.addEventListener("click", () => showForm("expense"));
+  buttons.debt.addEventListener("click", () => showForm("debt"));
+  buttons.loss.addEventListener("click", () => showForm("loss"));
+
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll('nav .nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      location.href = item.dataset.page;
+    });
+  });
+});
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  updateDoc,
+  query,
+  orderBy,
+  Timestamp
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { runTransaction } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD8_86DgCqPdwVNy1ww6PPz0TM5lVMWm_s",
+  authDomain: "es-shop-db.firebaseapp.com",
+  projectId: "es-shop-db",
+  storageBucket: "es-shop-db.firebasestorage.app",
+  messagingSenderId: "750093706451",
+  appId: "1:750093706451:web:62f0aa0891d0ed0ed96026",
+  measurementId: "G-TM3YYR5ZH7"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const auth = getAuth();
+
+let currentUserId = null;
+let allData = [];
+let allProducts = [];
+
+const ITEMS_PER_PAGE = 10;
+let currentPage = 1;
+
+// ================= DOM =================
+const list = document.getElementById("expensesList");
+const searchInput = document.getElementById("searchInput");
+const filterCategory = document.getElementById("filterCategory");
+const startDate = document.getElementById("startDate");
+const endDate = document.getElementById("endDate");
+
+
+const btnExpense = document.getElementById("addExpenseBtn");
+const btnDebt = document.getElementById("addDebtBtn");
+const btnProductLoss = document.getElementById("submitProductLoss");
+const btnMoneyLoss = document.getElementById("submitMoneyLoss");
+
+function debug(msg) {
+  const box = document.getElementById("debug");
+  if (!box) return;
+
+  box.textContent = msg;
+
+  setTimeout(() => box.textContent = "", 5000);
+}
+function setLoading(state) {
+  list.replaceChildren();
+
+  if (state) {
+    const div = document.createElement("div");
+    div.textContent = "⏳ Chargement...";
+    list.appendChild(div);
+  }
+}
+
+// ================= PRODUCTS =================
+async function loadProducts() {
+  const snap = await getDocs(collection(db, "products"));
+
+  allProducts = [];
+  const select = document.getElementById("productSelect");
+
+  select.replaceChildren();
+
+  snap.forEach(d => {
+    const p = { id: d.id, ...d.data() };
+    allProducts.push(p);
+
+    const option = document.createElement("option");
+    option.value = p.id;
+
+    option.textContent = `${p.name} (${p.variant || "standard"}) — stock:${p.stock_current}`;
+
+    select.appendChild(option);
+  });
+}
+
+// ================= DATA =================
+async function loadData() {
+  try {
+    setLoading(true);
+
+    const q = query(collection(db, "expensess"), orderBy("createdAt", "desc"));
+    const snap = await getDocs(q);
+
+    allData = [];
+
+    snap.forEach(d => {
+      allData.push({ id: d.id, ...d.data() });
+    });
+
+    render();
+
+  } catch (e) {
+    console.error("FULL ERROR:", e);
+    debug("❌ loadData: " + (e?.message || e));
+
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ================= FILTER =================
+function getFiltered() {
+  return allData.filter(e => {
+    const search = (searchInput?.value || "").toLowerCase();
+
+    const matchSearch =
+      !search ||
+      (e.reason || "").toLowerCase().includes(search) ||
+      (e.category || "").toLowerCase().includes(search);
+
+    const matchCategory =
+      filterCategory.value === "all" ||
+      e.category === filterCategory.value;
+
+    const date = e.createdAt?.toDate ? e.createdAt.toDate() : null;
+      
+      const matchDate =
+  (!startDate.value || (date && date >= new Date(startDate.value))) &&
+  (!endDate.value || (date && date <= new Date(endDate.value)));
+
+    return matchSearch && matchCategory && matchDate;
+  });
+}
+
+// ================= RENDER =================
+function render(page = 1) {
+  currentPage = page;
+
+  const data = getFiltered();
+  const start = (page - 1) * ITEMS_PER_PAGE;
+  const pageData = data.slice(start, start + ITEMS_PER_PAGE);
+
+  list.replaceChildren();
+
+  pageData.forEach(item => {
+    const div = document.createElement("div");
+    div.classList.add("expense-item");
+
+    const left = document.createElement("div");
+
+    const title = document.createElement("strong");
+    title.textContent = item.reason || "—";
+
+    // ===== BADGES =====
+    const badge = document.createElement("span");
+    badge.classList.add("badge");
+
+    if(item.genre === "expense"){
+      badge.classList.add("badge-expense");
+      badge.textContent = "EXPENSE";
+      title.appendChild(badge);
+    }
+    else if(item.genre === "debt"){
+      // 👉 badge TYPE
+      const badgeType = document.createElement("span");
+      badgeType.classList.add("badge", "badge-debt");
+      badgeType.textContent = "DEBT";
+
+      // 👉 badge STATUS
+      const badgeStatus = document.createElement("span");
+      badgeStatus.classList.add("badge");
+
+      if(item.status === "paid"){
+        badgeStatus.classList.add("badge-paid");
+        badgeStatus.textContent = "PAID";
+      } else {
+        badgeStatus.classList.add("badge-partial");
+        badgeStatus.textContent = "PARTIAL";
+      }
+
+      title.appendChild(badgeType);
+      title.appendChild(badgeStatus);
+    }
+    else if(item.genre === "loss"){
+      badge.classList.add("badge-loss");
+      badge.textContent = "LOSS";
+      title.appendChild(badge);
+    }
+
+    // ===== SUB =====
+    const sub = document.createElement("small");
+
+    let displayAmount = 0;
+
+    if (item.genre === "debt") {
+      sub.textContent = item.name || "unknown";
+      displayAmount = item.amount_remaining || 0;
+
+      if (item.DueDate && item.DueDate.toDate) {
+        const due = item.DueDate.toDate();
+        const now = new Date();
+        const days = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
+
+        const dueText = document.createElement("div");
+        dueText.textContent = `⏳ ${days} jours`;
+        dueText.style.color = "red";
+        dueText.style.fontSize = "12px";
+
+        left.appendChild(dueText);
+      }
+
+    } else {
+      sub.textContent = item.category || "—";
+      displayAmount = item.amount || 0;
+    }
+
+    left.appendChild(title);
+    left.appendChild(sub);
+
+    const amount = document.createElement("div");
+    amount.textContent = `${displayAmount || 0} FC`;
+    amount.style.fontWeight = "bold";
+
+    const btn = document.createElement("button");
+    btn.textContent = "Modifier";
+    btn.addEventListener("click", () => modifyFunc(item.id));
+
+    div.appendChild(left);
+    div.appendChild(amount);
+    div.appendChild(btn);
+
+    list.appendChild(div);
+  });
+
+  renderPagination(data.length);
+}
+
+// ================= STOCK MOVEMENT =================
+async function addStockMovement({ productId, type, quantity, reason, referenceId = null }) {
+  if (!productId || !type || !quantity) return;
+
+  await addDoc(collection(db, "stock_movements"), {
+    productId,
+    type,
+    quantity,
+    reason: reason || "unknown",
+    referenceId,
+    createdBy: currentUserId,
+    createdAt: Timestamp.now()
+  });
+}
+
+
+// ================= PAGINATION =================
+function renderPagination(total) {
+  const old = document.getElementById("pagination");
+  if (old) old.remove();
+
+  const pages = Math.ceil(total / ITEMS_PER_PAGE);
+
+  const container = document.createElement("div");
+  container.id = "pagination";
+  container.style.display = "flex";
+  container.style.gap = "6px";
+  container.style.justifyContent = "center";
+  container.style.marginTop = "10px";
+
+  for (let i = 1; i <= pages; i++) {
+    const btn = document.createElement("button");
+
+    btn.textContent = i;
+
+    btn.style.padding = "6px 10px";
+    btn.style.border = "none";
+    btn.style.borderRadius = "6px";
+    btn.style.cursor = "pointer";
+
+    if (i === currentPage) {
+      btn.style.background = "#0B5FFF";
+      btn.style.color = "white";
+    }
+
+    btn.onclick = () => render(i);
+
+    container.appendChild(btn);
+  }
+
+  list.after(container);
+}
+
+// ================= EXPENSE =================
+btnExpense.addEventListener("click", async () => {
+  const label = document.getElementById("label").value;
+  const category = document.getElementById("category").value;
+  const amount = Number(document.getElementById("amount").value);
+  const type = document.getElementById("type").value;
+  const relatedTo = document.getElementById("relatedTo").value;
+  const note = document.getElementById("note").value;
+
+  if (!label || isNaN(amount) || amount <= 0) {
+    return alert("Montant invalide");
+  }
+
+  await addDoc(collection(db, "expensess"), {
+    genre: "expense",
+    reason: label,
+    category,
+    amount,
+    type,
+    relatedTo: relatedTo || null,
+    note: note || "",
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+    createdBy: currentUserId
+  });
+
+  debug("dépense enregistrée");
+  loadData();
+});
+
+// ================= DEBT =================
+btnDebt.addEventListener("click", async () => {
+  const type = document.getElementById("debtType").value;
+  const name = document.getElementById("debtName").value;
+  const total = Number(document.getElementById("debtAmount").value);
+  const paid = Number(document.getElementById("debtPayed").value);
+  const note = document.getElementById("debtNote").value;
+  
+  const phone = document.getElementById("debtPhone").value;
+  
+  const dueDateInput = document.getElementById("debtDueDate").value;
+
+let dueTimestamp = null;
+if (dueDateInput) {
+  dueTimestamp = Timestamp.fromDate(new Date(dueDateInput));
+}
+
+  if (!name || isNaN(total) || total <= 0) {
+    return alert("Champs obligatoires");
+  }
+
+  const safePaid = isNaN(paid) ? 0 : paid;
+  const remaining = total - safePaid;
+
+  await addDoc(collection(db, "expensess"), {
+    genre: "debt",
+    reason: `${type} debt`,
+    name: name,
+    category: type,
+    
+    phone: phone || "",
+    DueDate: dueTimestamp,
+    amount_total: total,
+    amount_paid: safePaid,
+    amount_remaining: remaining,
+    status: remaining > 0 ? "partial" : "paid",
+
+    relatedTo: name,
+    note: note || "",
+
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+    createdBy: currentUserId
+  });
+
+  debug("dette enregistrée");
+  loadData();
+});
+
+// ================= LOSS PRODUCT =================
+btnProductLoss.addEventListener("click", async () => {
+  try {
+
+    const productId = document.getElementById("productSelect").value;
+    const qtyLost = Number(document.getElementById("productQuantityLost").value);
+    const reason = document.getElementById("productLossReason").value;
+
+    if (!productId || qtyLost <= 0) return alert("Produit invalide");
+
+    const product = allProducts.find(p => p.id === productId);
+    if (!product) return alert("Produit introuvable");
+
+    const currentStock = Number(product.stock_current || 0);
+    const newStock = Math.max(0, currentStock - qtyLost);
+
+    const priceBuy = Number(product.price_buy || 0);
+
+const ref = await addDoc(collection(db, "expensess"), {
+  genre: "loss",
+  reason,
+  category: "product_loss",
+  amount: qtyLost * priceBuy,
+  relatedTo: productId,
+  createdAt: Timestamp.now(),
+  updatedAt: Timestamp.now(),
+  createdBy: currentUserId
+});
+
+await addStockMovement({
+  productId,
+  type: "OUT",
+  quantity: qtyLost,
+  reason: "loss",
+  referenceId: ref.id
+});
+
+    await updateDoc(doc(db, "products", productId), {
+      stock_current: newStock
+    });
+
+    loadProducts();
+    loadData();
+    
+    debug(`OK LOSS: ${productId} | -${qtyLost} | stock=${newStock}`);
+    console.log("OK LOSS:", { productId, qtyLost, newStock });
+
+  } catch (err) {
+    console.error("LOSS ERROR:", err);
+    debug(`LOSS ERROR: ${err.message || err}`);
+    alert("Erreur perte produit");
+  }
+});
+
+// ================= LOSS MONEY =================
+btnMoneyLoss.addEventListener("click", async () => {
+  const amount = Number(document.getElementById("moneyLostAmount").value);
+  const reason = document.getElementById("moneyLossReason").value;
+
+  if (isNaN(amount) || amount <= 0) {
+    return alert("Montant invalide");
+  }
+
+  await addDoc(collection(db, "expensess"), {
+    genre: "loss",
+    reason,
+    category: "money_loss",
+    amount,
+    type: "fixed",
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
+    createdBy: currentUserId
+  });
+
+  debug("perte argent enregistrée");
+  loadData();
+});
+
+// =============== MODIFICATION ===============
+async function modifyFunc(id){
+  if(!currentUserId){
+    alert("Non autorisé");
+    return;
+  }
+
+  const item = allData.find(e => e.id === id);
+  if (!item) return;
+
+  // ================= LOSS =================
+  if(item.genre === "loss"){
+    const qty = Number(prompt("Quantité à corriger (+ uniquement)"));
+
+    if(isNaN(qty) || qty <= 0) return;
+
+    const productId = item.relatedTo;
+    const product = allProducts.find(p => p.id === productId);
+    if (!product) return alert("Produit introuvable");
+
+    // mouvement inverse
+    await addDoc(collection(db, "stock_movements"), {
+      productId,
+      type: "IN",
+      quantity: qty,
+      reason: "correction_loss",
+      referenceId: id,
+      createdBy: currentUserId,
+      createdAt: Timestamp.now()
+    });
+
+    // update stock cache
+    await updateDoc(doc(db, "products", productId), {
+      stock_current: Number(product.stock_current || 0) + qty
+    });
+
+    debug("Correction perte OK");
+
+    await loadProducts();
+    await loadData();
+  }
+
+  // ================= EXPENSE =================
+  else if(item.genre === "expense"){
+    const newAmount = Number(prompt("Nouveau montant"));
+
+    if(isNaN(newAmount) || newAmount <= 0) return;
+
+    await updateDoc(doc(db, "expensess", id), {
+      amount: newAmount,
+      updatedAt: Timestamp.now()
+    });
+
+    debug("Dépense modifiée");
+
+    await loadData();
+  }
+
+  // ================= DEBT =================
+
+else if(item.genre === "debt"){
+  const pay = Number(prompt("Montant payé"));
+
+  if(isNaN(pay) || pay <= 0) return;
+
+  const debtRef = doc(db, "expensess", id);
+
+  await runTransaction(db, async (tx) => {
+
+    const debtSnap = await tx.get(debtRef);
+    if (!debtSnap.exists()) throw new Error("Dette introuvable");
+
+    const d = debtSnap.data();
+
+    const currentPaid = Number(d.amount_paid || 0);
+    const total = Number(d.amount_total || 0);
+
+    const newPaid = currentPaid + pay;
+
+    if(newPaid > total){
+      throw new Error("Paiement dépasse la dette");
+    }
+
+    const remaining = total - newPaid;
+    const status = remaining > 0 ? "partial" : "paid";
+
+    // ✅ UPDATE DETTE
+    tx.update(debtRef, {
+      amount_paid: newPaid,
+      amount_remaining: remaining,
+      status,
+      updatedAt: Timestamp.now()
+    });
+
+    // ✅ UPDATE SALE SI LIÉE
+    if(d.relatedSaleId){
+      const saleRef = doc(db, "sales", d.relatedSaleId);
+      const saleSnap = await tx.get(saleRef);
+
+      if(saleSnap.exists()){
+        const s = saleSnap.data();
+
+        const salePaid = Number(s.amount_paid || 0) + pay;
+        const saleTotal = Number(s.total_amount || 0);
+
+        const saleRemaining = saleTotal - salePaid;
+        const saleStatus = saleRemaining > 0 ? "partial" : "paid";
+
+        tx.update(saleRef, {
+          amount_paid: salePaid,
+          amount_remaining: saleRemaining,
+          payment_status: saleStatus,
+          hasDebt: saleRemaining > 0,
+          updatedAt: Timestamp.now()
+        });
+      }
+    }
+  });
+
+  debug("Paiement ajouté (sync OK)");
+  await loadData();
+}
+
+// ================= EVENTS =================
+searchInput.addEventListener("input", () => render(1));
+filterCategory.addEventListener("change", () => render(1));
+startDate.addEventListener("change", () => render(1));
+endDate.addEventListener("change", () => render(1));
+
+// ================= AUTH =================
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return (location.href = "login.html");
+
+  currentUserId = user.uid;
+
+  try {
+    setLoading(true);
+    await loadProducts();
+    await loadData();
+    setLoading(false);
+  } catch (e) {
+    console.error(e);
+    debug("❌ ERROR LOAD: " + (e.message || e));
+  }
+});
+</script>
+
+</body>
+</html>
