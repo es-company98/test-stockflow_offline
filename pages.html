@@ -6,7 +6,12 @@
 <title>ES Shop - Pages</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial;}
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial;
+}
 
 body{
   background:#0f0f0f;
@@ -30,18 +35,29 @@ h2{
   gap:12px;
 }
 
-/* CARD */
+/* CARD (UNIFIED CLICKABLE ELEMENT) */
 .card{
   background:#1c1c1c;
   padding:15px;
   border-radius:12px;
   cursor:pointer;
   transition:0.2s;
+
   text-align:center;
+
+  /* IMPORTANT: compatibilité <div> + <a> */
+  display:block;
+  text-decoration:none;
+  color:inherit;
 }
 
 .card:hover{
   background:#0B3D2E;
+  transform:translateY(-2px);
+}
+
+.card:active{
+  transform:scale(0.98);
 }
 
 .card h4{
@@ -54,7 +70,7 @@ h2{
   color:#aaa;
 }
 
-/* LOCKED */
+/* DISABLED / LOCKED */
 .locked{
   background:#111;
   opacity:0.3;
@@ -70,6 +86,7 @@ h2{
   justify-content:center;
   align-items:center;
   font-size:18px;
+  z-index:99999;
 }
 </style>
 </head>
@@ -85,62 +102,55 @@ h2{
 <div class="grid" id="pages-grid">
 
   <!-- CORE -->
-  <div class="card" data-page="index.html">
+  <a class="card" data-page="index.html" href="index.html">
     <h4>🛒 Vente rapide</h4>
     <p>Créer une vente</p>
-  </div>
+  </a>
 
-  <div class="card" data-page="products.html">
+  <a class="card" data-page="products.html" href="products.html">
     <h4>📦 Produits</h4>
     <p>Gestion du stock</p>
-  </div>
+  </a>
 
-  <div class="card" data-page="stats.html">
+  <a class="card" data-page="stats.html" href="stats.html">
     <h4>📊 Statistiques</h4>
     <p>Analyse business</p>
-  </div>
+  </a>
 
-  <div class="card" data-page="purchases.html">
+  <a class="card" data-page="purchases.html" href="purchases.html">
     <h4>📥 Achats</h4>
     <p>Entrées stock</p>
-  </div>
-  
-  <div class="card" data-page="expensess.html">
+  </a>
+
+  <!-- FINANCE (corrigé + propre regroupement) -->
+  <a class="card" data-page="expensess.html" href="expensess.html">
     <h4>💸 Dépenses</h4>
-    <h4>💳 Dettes</h4>
-    <h4>❌ Pertes</h4>
-    <p>Sorties argent</p>
-  </div>
+    <p>💳 Dettes • ❌ Pertes</p>
+  </a>
 
   <!-- SYSTEM -->
-  <div class="card" data-page="settings.html">
+  <a class="card" data-page="settings.html" href="settings.html">
     <h4>⚙️ Paramètres</h4>
     <p>Configuration</p>
-  </div>
+  </a>
 
   <!-- AUTH -->
-  <div class="card" data-page="login.html">
+  <a class="card" data-page="login.html" href="login.html">
     <h4>🔐 Login</h4>
     <p>Connexion</p>
-  </div>
+  </a>
 
-  <div class="card" data-page="signup.html">
-    <h4>📝 Signup</h4>
-    <p>Créer compte</p>
-  </div>
-
-</div>
+  <a class="card" data-page="help.html" href="help.html">
+    <h4>🤝 Support</h4>
+    <p>Obtenir de l'aide</p>
+  </a>
 
 </div>
 
-<script>
-/* NAVIGATION */
-document.querySelectorAll(".card").forEach(el=>{
-  el.onclick = () => {
-    location.href = el.dataset.page;
-  };
-});
-</script>
+</div>
+
+<script src="js/nav.js"></script>
 <script type="module" src="js/pages.js"></script>
+
 </body>
 </html>
