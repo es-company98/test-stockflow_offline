@@ -136,59 +136,71 @@ export function showOfflineWarning() {
 
    div.textContent =
   "⚠️ Mode hors ligne actif : vérifiez qu’aucune autre caisse n’effectue des ventes afin d’éviter des erreurs de stock lors de la synchronisation.";
-  
-  div.style.position = "sticky";
 
-div.style.top = "70px";
+   const header =
+  document.querySelector(".header");
 
-div.style.margin = "10px";
+const headerHeight =
+  header?.offsetHeight || 60;
 
-div.style.padding = "12px 16px";
+div.style.position = "fixed";
+
+div.style.top =
+  `${headerHeight + 6}px`;
+
+div.style.left = "12px";
+
+div.style.right = "12px";
+
+div.style.padding =
+  "12px 16px";
 
 div.style.background =
-  "rgba(243,156,18,0.12)";
+  "rgba(243,156,18,0.96)";
 
-div.style.border =
-  "1px solid rgba(243,156,18,0.45)";
-
-div.style.borderLeft =
-  "4px solid #f39c12";
+div.style.color = "#111";
 
 div.style.borderRadius = "14px";
-
-div.style.backdropFilter =
-  "blur(8px)";
-
-div.style.color = "#f39c12";
 
 div.style.fontSize = "13px";
 
 div.style.fontWeight = "700";
 
-div.style.lineHeight = "1.5";
-
-div.style.textAlign = "left";
+div.style.lineHeight = "1.45";
 
 div.style.boxShadow =
-  "0 4px 14px rgba(0,0,0,0.08)";
+  "0 6px 18px rgba(0,0,0,0.18)";
 
-div.style.zIndex = "999";
+div.style.zIndex = "99999";
 
 div.style.pointerEvents = "none";
 
-div.style.transition =
-  "opacity 0.3s ease";
+div.style.borderLeft =
+  "5px solid #fff";
 
-div.style.opacity = "1";
+div.style.backdropFilter =
+  "blur(6px)";
+
+div.style.transition =
+  "opacity 0.25s ease";
 
 div.animate(
   [
-    { opacity: 0.75 },
-    { opacity: 1 },
-    { opacity: 0.75 }
+    {
+      transform: "translateY(0px)",
+      opacity: 0.82
+    },
+    {
+      transform: "translateY(-2px)",
+      opacity: 1
+    },
+    {
+      transform: "translateY(0px)",
+      opacity: 0.82
+    }
   ],
   {
-    duration: 1800,
+    duration: 1500,
     iterations: Infinity
   }
 );
