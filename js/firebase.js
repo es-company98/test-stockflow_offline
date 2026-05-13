@@ -3,7 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/fireba
 import { 
   getFirestore, collection, addDoc, getDocs,setDoc, updateDoc, deleteDoc, doc,
   getDoc, query, where, serverTimestamp, Timestamp, enableIndexedDbPersistence,
-  runTransaction
+  runTransaction, limit
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -22,5 +22,5 @@ const db = getFirestore(app);
 export { 
   db, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, getDoc,setDoc,
   query, where, serverTimestamp, Timestamp, enableIndexedDbPersistence,
-  runTransaction
+  runTransaction, limit
 };
