@@ -1,4 +1,4 @@
-const CACHE_NAME = "stockflow-v2";
+const CACHE_NAME = "stockflow-v01";
 
 /* =========================
    CORE OFFLINE FILES
@@ -16,6 +16,9 @@ const CORE_ASSETS = [
   "/pages.html",
   "/login.html",
   "/help.html",
+  "/manifest.json",
+  "/logo.png",
+  "/home.png",
   "/settings.html",
   "/ranging.html",
 
