@@ -541,10 +541,10 @@ sales.forEach(s => {
   chartData[key] = (chartData[key] || 0) + n(s.total_amount);
 });
 
-  const totalSales = sales.reduce((a, s) =>
-    a + n(s.total_amount || s.amount || s.amount_total)
-  , 0);
-
+  const totalSales = sales.reduce(
+  (a, s) =>
+    a + n(s.amount_paid ?? s.total_amount),0);
+  
   const totalProfit = sales.reduce((a, s) =>
     a + n(s.total_profit || s.profit)
   , 0);
