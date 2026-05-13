@@ -42,7 +42,7 @@ const today = new Date().toISOString().split("T")[0];
 saleDateInput.max = today;
 const now = new Date();
 saleDateInput.max = now.toISOString().split("T")[0];
-saleDateInput.min = "2026-04-31";
+saleDateInput.min = "2026-04-30";
 // sécurité date
 saleDateInput.addEventListener("input", () => {
   const selected = new Date(saleDateInput.value).getTime();
