@@ -40,8 +40,6 @@ const searchInput = document.getElementById('searchInput');
 //limit sales date
 const today = new Date().toISOString().split("T")[0];
 saleDateInput.max = today;
-const now = new Date();
-saleDateInput.max = now.toISOString().split("T")[0];
 saleDateInput.min = "2026-04-30";
 // sécurité date
 saleDateInput.addEventListener("input", () => {
@@ -51,6 +49,16 @@ saleDateInput.addEventListener("input", () => {
     saleDateInput.value = "";
     alert("Date future interdite");
   }
+});
+manualDateCheckbox.addEventListener("change", () => {
+
+  saleDateInput.disabled =
+    !manualDateCheckbox.checked;
+
+  if (!manualDateCheckbox.checked) {
+    saleDateInput.value = "";
+  }
+
 });
 
 // ---- open debts input 
