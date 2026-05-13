@@ -1,4 +1,4 @@
-const CACHE_NAME = "stockflow-v1";
+const CACHE_NAME = "stockflow-v2";
 
 /* =========================
    CORE OFFLINE FILES
@@ -24,6 +24,7 @@ const CORE_ASSETS = [
   "/js/nav.js",
   "/js/pwa.js",
   "/js/receipt.js",
+   "/js/offline.js",
   "/js/products.js",
   "/js/purchases.js",
   "/js/stats.js",
@@ -245,43 +246,3 @@ self.addEventListener(
   }
 );
 
-/* =========================
-   SW REGISTER
-========================= */
-
-if (
-  typeof window !== "undefined" &&
-  "serviceWorker" in navigator
-) {
-
-  window.addEventListener(
-    "load",
-    () => {
-
-      navigator.serviceWorker
-        .register(
-          "/service-worker.js"
-        )
-
-        .then((reg) => {
-
-          console.log(
-            "✅ SW OK:",
-            reg.scope
-          );
-
-        })
-
-        .catch((err) => {
-
-          console.error(
-            "❌ SW FAIL:",
-            err
-          );
-
-        });
-
-    }
-  );
-
-}
