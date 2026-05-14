@@ -159,7 +159,8 @@ function resetInputs(ids){
 function render(page = 1) {
   currentPage = page;
 
-  const data = getFiltered();
+  const data = getFiltered()
+  .filter(e => e.status !== "cancelled");
   const start = (page - 1) * ITEMS_PER_PAGE;
   const pageData = data.slice(start, start + ITEMS_PER_PAGE);
 
@@ -518,6 +519,7 @@ async function modifyFunc(id){
 
     const productId = item.relatedTo;
     const product = allProducts.find(p => p.id === productId);
+    const priceBuy = Number(product.price_buy || 0);
     if (!product) return alert("Produit introuvable");
 
     // mouvement inverse
