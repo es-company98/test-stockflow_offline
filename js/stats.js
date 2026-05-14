@@ -41,9 +41,13 @@ onAuthStateChanged(auth, async (user) => {
     location.href = "login.html";
     return;
   }
-
+   
+if (userData.role !== "admin") {
+  throw new Error("Accès refusé");
+}
   debug("🔄 Chargement...");
   await load();
+   
 });
 
 /* =========================
