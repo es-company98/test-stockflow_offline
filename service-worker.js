@@ -1,13 +1,11 @@
-const CACHE_NAME = "stockflow-v01";
+const CACHE_NAME = "stockflow-v2";
 
 /* =========================
    CORE OFFLINE FILES
 ========================= */
 
 const CORE_ASSETS = [
-
   "/",
-
   "/index.html",
   "/products.html",
   "/purchases.html",
@@ -37,7 +35,6 @@ const CORE_ASSETS = [
   "/js/settings.js",
   "/js/ranging.js",
   "/js/firebase.js"
-
 ];
 
 /* =========================
