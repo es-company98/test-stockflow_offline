@@ -513,6 +513,11 @@ async function modifyFunc(id){
 
   // ================= LOSS =================
   if(item.genre === "loss"){
+    // ❌ BLOQUER CORRECTION D’UNE CORRECTION
+  if(item.reason === "correction" || item.reason=== "correction_loss", || item.category === "product_loss_correction"){
+    alert("Impossible de corriger une correction");
+    return;
+  }
     const qty = Number(prompt("Quantité à corriger (+ uniquement)"));
 
     if(isNaN(qty) || qty <= 0) return;
