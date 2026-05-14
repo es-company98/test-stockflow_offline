@@ -27,7 +27,7 @@ signupForm.addEventListener('submit', async (e) => {
     // 🧠 2. Création Firestore avec UID = ID
     await setDoc(doc(db, "users", uid), {
       userId: uid,
-      fullName,
+      name : fullName,
       email,
       role: "user", // sécurité
       isActive,     // ✅ checkbox pris en compte
