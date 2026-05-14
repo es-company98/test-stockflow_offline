@@ -19,11 +19,8 @@ import {
    DOM
 ========================= */
 
-const topContainer =
-  document.getElementById("topProducts");
-
-const lowContainer =
-  document.getElementById("lowProducts");
+const topContainer = document.getElementById("topProducts");
+const lowContainer = document.getElementById("lowProducts");
 
 /* =========================
    AUTH
@@ -37,255 +34,114 @@ const auth = getAuth();
 
 async function checkUser(uid) {
 
-  const userRef =
-    doc(db, "users", uid);
+  if (!uid) throw new Error("UID invalide");
 
-  const userSnap =
-    await getDoc(userRef);
+  const userSnap = await getDoc(doc(db, "users", uid));
 
   if (!userSnap.exists()) {
-    throw new Error(
-      "Utilisateur introuvable"
-    );
+    throw new Error("Utilisateur introuvable");
   }
 
-  const userData =
-    userSnap.data();
+  const userData = userSnap.data();
 
-  if (!userData.isActive) {
-    throw new Error(
-      "Compte désactivé"
-    );
+  if (!userData?.isActive) {
+    throw new Error("Compte désactivé");
   }
 
-  if (
-    userData.role !== "admin" &&
-    userData.role !== "seller"
-  ) {
-    throw new Error(
-      "Accès refusé"
-    );
+  if (!["admin", "seller"].includes(userData.role)) {
+    throw new Error("Accès refusé");
   }
 
   return userData;
-
 }
 
 /* =========================
    HELPERS
 ========================= */
 
-function sanitizeText(
-  value,
-  max = 80
-) {
-
-  if (typeof value !== "string") {
-    return "";
-  }
-
-  return value
-    .trim()
-    .replace(/\s+/g, " ")
-    .slice(0, max);
-
+function sanitizeText(value, max = 80) {
+  if (typeof value !== "string") return "";
+  return value.trim().replace(/\s+/g, " ").slice(0, max);
 }
 
 function clearContainer(container) {
+  if (container) container.replaceChildren();
+}
 
+function showEmpty(container, text) {
   if (!container) return;
 
   container.replaceChildren();
 
-}
-
-function showEmpty(container, text) {
-
-  clearContainer(container);
-
-  const div =
-    document.createElement("div");
-
+  const div = document.createElement("div");
   div.className = "empty";
-
   div.textContent = text;
 
   container.appendChild(div);
-
 }
 
-function createProgressBar(
-  percent,
-  type
-) {
-
-  const progress =
-    document.createElement("div");
-
+function createProgressBar(percent, type) {
+  const progress = document.createElement("div");
   progress.className = "progress";
 
-  const fill =
-    document.createElement("div");
-
-  fill.className =
-    `progress-fill ${type}`;
-
-  fill.style.width =
-    `${Math.min(percent, 100)}%`;
+  const fill = document.createElement("div");
+  fill.className = `progress-fill ${type}`;
+  fill.style.width = `${Math.min(Number(percent) || 0, 100)}%`;
 
   progress.appendChild(fill);
-
   return progress;
-
 }
 
 /* =========================
-   CREATE CARD
+   CARD
 ========================= */
 
-function createCard(
-  item,
-  type = "gold",
-  position = 1
-) {
+function createCard(item, type = "gold", position = 1) {
 
-  const card =
-    document.createElement("div");
+  const card = document.createElement("div");
+  card.className = `rank-card ${type === "gold" ? "gold" : "low"}`;
 
-  card.className =
-    `rank-card ${
-      type === "gold"
-        ? "gold"
-        : "low"
-    }`;
-
-  const top =
-    document.createElement("div");
-
+  const top = document.createElement("div");
   top.className = "card-top";
 
-  const name =
-    document.createElement("div");
+  const name = document.createElement("div");
+  name.className = "product-name";
+  name.textContent = sanitizeText(item.name);
 
-  name.className =
-    "product-name";
+  const badge = document.createElement("div");
+  badge.className = `rank-badge ${type === "gold" ? "best" : "low"}`;
+  badge.textContent = `#${position}`;
 
-  name.textContent =
-    sanitizeText(item.name);
+  top.append(name, badge);
 
-  const badge =
-    document.createElement("div");
+  const stats = document.createElement("div");
+  stats.className = "card-stats";
 
-  badge.className =
-    `rank-badge ${
-      type === "gold"
-        ? "best"
-        : "low"
-    }`;
+  const lines = [
+    ["Ventes", item.quantity],
+    ["Part des ventes", `${item.percent}%`],
+    ["Cote", `${item.score}/10`]
+  ];
 
-  badge.textContent =
-    `#${position}`;
+  lines.forEach(([label, value]) => {
+    const line = document.createElement("div");
+    line.className = "stat-line";
 
-  top.append(
-    name,
-    badge
-  );
+    const l = document.createElement("span");
+    l.textContent = label;
 
-  const stats =
-    document.createElement("div");
+    const v = document.createElement("strong");
+    v.textContent = value;
 
-  stats.className =
-    "card-stats";
+    line.append(l, v);
+    stats.appendChild(line);
+  });
 
-  const soldLine =
-    document.createElement("div");
+  const progress = createProgressBar(item.percent, type);
 
-  soldLine.className =
-    "stat-line";
-
-  const soldLabel =
-    document.createElement("span");
-
-  soldLabel.textContent =
-    "Ventes";
-
-  const soldValue =
-    document.createElement("strong");
-
-  soldValue.textContent =
-    `${item.quantity}`;
-
-  soldLine.append(
-    soldLabel,
-    soldValue
-  );
-
-  const percentLine =
-    document.createElement("div");
-
-  percentLine.className =
-    "stat-line";
-
-  const percentLabel =
-    document.createElement("span");
-
-  percentLabel.textContent =
-    "Part des ventes";
-
-  const percentValue =
-    document.createElement("strong");
-
-  percentValue.textContent =
-    `${item.percent}%`;
-
-  percentLine.append(
-    percentLabel,
-    percentValue
-  );
-
-  const scoreLine =
-    document.createElement("div");
-
-  scoreLine.className =
-    "stat-line";
-
-  const scoreLabel =
-    document.createElement("span");
-
-  scoreLabel.textContent =
-    "Cote";
-
-  const scoreValue =
-    document.createElement("strong");
-
-  scoreValue.textContent =
-    `${item.score}/10`;
-
-  scoreLine.append(
-    scoreLabel,
-    scoreValue
-  );
-
-  stats.append(
-    soldLine,
-    percentLine,
-    scoreLine
-  );
-
-  const progress =
-    createProgressBar(
-      item.percent,
-      type
-    );
-
-  card.append(
-    top,
-    stats,
-    progress
-  );
+  card.append(top, stats, progress);
 
   return card;
-
 }
 
 /* =========================
@@ -297,248 +153,104 @@ async function loadRanking() {
   clearContainer(topContainer);
   clearContainer(lowContainer);
 
-  const saleItemsSnap =
-    await getDocs(
-      query(
-        collection(
-          db,
-          "sale_items"
-        ),
-        limit(5000)
-      )
-    );
+  const saleItemsSnap = await getDocs(
+    query(collection(db, "sale_items"), limit(5000))
+  );
 
   if (saleItemsSnap.empty) {
-
-    showEmpty(
-      topContainer,
-      "Aucune vente enregistrée"
-    );
-
-    showEmpty(
-      lowContainer,
-      "Aucune donnée disponible"
-    );
-
+    showEmpty(topContainer, "Aucune vente enregistrée");
+    showEmpty(lowContainer, "Aucune donnée disponible");
     return;
-
   }
 
-  const map =
-    new Map();
-
+  const map = new Map();
   let totalSold = 0;
 
   saleItemsSnap.forEach(docSnap => {
+    const data = docSnap.data();
+    const productId = data?.productId;
+    const quantity = Number(data?.quantity || 0);
 
-    const data =
-      docSnap.data();
-
-    const productId =
-      data.productId;
-
-    const quantity =
-      Number(
-        data.quantity || 0
-      );
+    if (!productId) return;
 
     totalSold += quantity;
 
     if (!map.has(productId)) {
-
-      map.set(productId, {
-        productId,
-        quantity: 0
-      });
-
+      map.set(productId, 0);
     }
 
-    const current =
-      map.get(productId);
-
-    current.quantity += quantity;
-
+    map.set(productId, map.get(productId) + quantity);
   });
 
-  const productsSnap =
-    await getDocs(
-      collection(db, "products")
-    );
-
-  const productsMap =
-    new Map();
+  const productsSnap = await getDocs(collection(db, "products"));
+  const productsMap = new Map();
 
   productsSnap.forEach(docSnap => {
-
-    productsMap.set(
-      docSnap.id,
-      docSnap.data()
-    );
-
+    productsMap.set(docSnap.id, docSnap.data());
   });
 
-  const ranking =
-    Array.from(map.values())
-      .map(item => {
+  const ranking = Array.from(map.entries())
+    .map(([productId, quantity]) => {
 
-        const product =
-          productsMap.get(
-            item.productId
-          ) || {};
+      const product = productsMap.get(productId) || {};
 
-        const percent =
-          totalSold > 0
-            ? (
-              item.quantity
-              / totalSold
-            ) * 100
-            : 0;
+      const percent = totalSold
+        ? (quantity / totalSold) * 100
+        : 0;
 
-        const score =
-          Math.min(
-            10,
-            (
-              percent / 10
-            ) * 10
-          );
+      const score = Math.min(10, percent);
 
-        return {
-          productId:
-            item.productId,
+      return {
+        productId,
+        name: sanitizeText(product.name || "Produit inconnu"),
+        quantity,
+        percent: Number(percent.toFixed(1)),
+        score: Number(score.toFixed(1))
+      };
+    })
+    .sort((a, b) => b.quantity - a.quantity);
 
-          name:
-            sanitizeText(
-              product.name ||
-              "Produit inconnu"
-            ),
-
-          quantity:
-            item.quantity,
-
-          percent:
-            Number(
-              percent.toFixed(1)
-            ),
-
-          score:
-            Number(
-              score.toFixed(1)
-            )
-        };
-
-      })
-      .sort(
-        (a, b) =>
-          b.quantity -
-          a.quantity
-      );
-
-  const topFive =
-    ranking.slice(0, 5);
-
-  const lowFive =
-    [...ranking]
-      .reverse()
-      .slice(0, 5);
+  const topFive = ranking.slice(0, 5);
+  const lowFive = [...ranking].slice(-5).reverse();
 
   if (!topFive.length) {
-
-    showEmpty(
-      topContainer,
-      "Top indisponible"
-    );
-
+    showEmpty(topContainer, "Top indisponible");
   } else {
-
-    topFive.forEach(
-      (item, index) => {
-
-        const card =
-          createCard(
-            item,
-            "gold",
-            index + 1
-          );
-
-        topContainer.appendChild(
-          card
-        );
-
-      }
+    topContainer.replaceChildren(
+      ...topFive.map((item, i) =>
+        createCard(item, "gold", i + 1)
+      )
     );
-
   }
 
   if (!lowFive.length) {
-
-    showEmpty(
-      lowContainer,
-      "Classement faible indisponible"
-    );
-
+    showEmpty(lowContainer, "Classement faible indisponible");
   } else {
-
-    lowFive.forEach(
-      (item, index) => {
-
-        const card =
-          createCard(
-            item,
-            "red",
-            index + 1
-          );
-
-        lowContainer.appendChild(
-          card
-        );
-
-      }
+    lowContainer.replaceChildren(
+      ...lowFive.map((item, i) =>
+        createCard(item, "red", i + 1)
+      )
     );
-
   }
-
 }
 
 /* =========================
    INIT
 ========================= */
 
-onAuthStateChanged(
-  auth,
-  async user => {
+onAuthStateChanged(auth, async user => {
 
-    if (!user) {
-
-      alert(
-        "Connexion requise"
-      );
-
-      window.location.replace(
-        "login.html"
-      );
-
-      return;
-
-    }
-
-    try {
-
-      await checkUser(
-        user.uid
-      );
-
-      await loadRanking();
-
-    } catch (err) {
-
-      console.error(err);
-
-      alert(
-        err.message ||
-        "Erreur"
-      );
-
-    }
-
+  if (!user) {
+    alert("Connexion requise");
+    window.location.replace("login.html");
+    return;
   }
-);
+
+  try {
+    await checkUser(user.uid);
+    await loadRanking();
+  } catch (err) {
+    console.error(err);
+    alert(err?.message || "Erreur");
+  }
+});
