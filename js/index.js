@@ -27,7 +27,7 @@ const paymentType = document.getElementById('paymentType');
 const amountPaidInput = document.getElementById('amountPaid');
 const clientNameInput = document.getElementById('clientName');
 
-const stats = document.getElementById("stats");
+const status = document.getElementById("status");
 
 const productsContainer = document.getElementById('productsContainer');
 const cartDom = document.querySelector('.cart');
