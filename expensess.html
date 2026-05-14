@@ -4,7 +4,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<meta http-equiv="Content-Security-Policy"
+content="
+default-src 'self';
+script-src 'self' https://www.gstatic.com https://*.firebaseio.com https://*.googleapis.com 'unsafe-inline' 'unsafe-eval';
+connect-src 'self' https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com;
+img-src 'self' data: https:;
+style-src 'self' 'unsafe-inline';
+font-src 'self' data:;
+frame-src 'self' https://*.firebaseapp.com;
+base-uri 'self';
+object-src 'none';
+form-action 'self';
+upgrade-insecure-requests;
+">
 <title>Gestion des Dépenses</title>
 
 <style>
