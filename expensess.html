@@ -885,6 +885,16 @@ async function modifyFunc(id){
       createdAt: Timestamp.now()
     });
 
+    // après stock update
+await updateDoc(doc(db, "expensess", id), {
+  updatedAt: Timestamp.now(),
+  correction: {
+    qty,
+    correctedAt: Timestamp.now(),
+    correctedBy: currentUserId
+  }
+});
+
     // update stock cache
     await updateDoc(doc(db, "products", productId), {
       stock_current: Number(product.stock_current || 0) + qty
