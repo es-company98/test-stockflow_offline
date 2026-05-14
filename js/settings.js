@@ -280,56 +280,35 @@ async function loadUsers() {
 
       /* ---------- NAME ---------- */
 
-      const nameTd =
-        document.createElement("td");
+      /* ---------- NAME ---------- */
+const nameTd = document.createElement("td");
+nameTd.textContent = sanitizeText(data.name || "-");
 
-      nameTd.textContent =
-        sanitizeText(
-          data.name || "-"
-        );
+/* ---------- EMAIL ---------- */ // <-- manquait
+const emailTd = document.createElement("td");
+emailTd.textContent = sanitizeText(data.email || "-");
 
-      /* ---------- ROLE ---------- */
+/* ---------- ROLE ---------- */
+const roleTd = document.createElement("td");
+roleTd.appendChild(createBadge(data.role || "seller"));
 
-      const roleTd =
-        document.createElement("td");
+/* ---------- STATUS ---------- */
+const statusTd = document.createElement("td");
+const status = document.createElement("span");
+status.className = "status-badge";
 
-      roleTd.appendChild(
-        createBadge(
-          data.role || "seller"
-        )
-      );
+if (data.isActive === false) {
+  status.textContent = "Désactivé";
+  status.classList.add("inactive");
+} else {
+  status.textContent = "Actif";
+  status.classList.add("active");
+}
+statusTd.appendChild(status);
 
-      /* ---------- STATUS ---------- */
-
-      const statusTd =
-        document.createElement("td");
-
-      const status =
-        document.createElement("span");
-
-      status.className =
-        "status-badge";
-
-      if (data.isActive === false) {
-
-        status.textContent =
-          "Désactivé";
-
-        status.classList.add(
-          "inactive"
-        );
-
-      } else {
-
-        status.textContent =
-          "Actif";
-
-        status.classList.add(
-          "active"
-        );
-      }
-
-      statusTd.appendChild(status);
+/* ---------- ACTIONS ---------- */
+const actionsTd = document.createElement("td");
+actionsTd.className = "actions";
 
       /* ---------- ACTIONS ---------- */
 
@@ -499,29 +478,20 @@ async function loadUsers() {
         }
       );
 
-      actionsTd.appendChild(
-        roleBtn
-      );
-
-      actionsTd.appendChild(
-        statusBtn
-      );
-
-      actionsTd.appendChild(
-        deleteBtn
-      );
-
       /* ---------- APPEND ---------- */
+      actionsTd.appendChild(roleBtn);
+actionsTd.appendChild(statusBtn);
+actionsTd.appendChild(deleteBtn);
 
-      tr.appendChild(nameTd);
+/* ---------- APPEND ---------- */
+tr.appendChild(nameTd);
+tr.appendChild(emailTd);   // <-- ajoute ça
+tr.appendChild(roleTd);
+tr.appendChild(statusTd);  // <-- remet ça à la bonne place
+tr.appendChild(actionsTd);
 
-      tr.appendChild(roleTd);
+usersTableBody.appendChild(tr);
 
-      tr.appendChild(statusTd);
-
-      tr.appendChild(actionsTd);
-
-      usersTableBody.appendChild(tr);
 
     });
 
@@ -537,4 +507,5 @@ async function loadUsers() {
 
     showLoading(false);
   }
- }
+
+}
