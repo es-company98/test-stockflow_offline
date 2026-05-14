@@ -249,259 +249,134 @@ async function loadUsers() {
 
   try {
 
-    showLoading(true);
-
-    usersTableBody.replaceChildren();
-
-    const snapshot =
-      await getDocs(usersCollection);
-
-    if (snapshot.empty) {
-
-      showEmpty(true);
-
-      showLoading(false);
-
-      return;
-    }
-
-    showEmpty(false);
-
-    snapshot.forEach((docSnap) => {
-
-      const data =
-        docSnap.data();
-
-      const userId =
-        docSnap.id;
-
-      const tr =
-        document.createElement("tr");
-
-      /* ---------- NAME ---------- */
-
-      /* ---------- NAME ---------- */
-const nameTd = document.createElement("td");
-nameTd.textContent = sanitizeText(data.name || "-");
-
-/* ---------- EMAIL ---------- */ // <-- manquait
-const emailTd = document.createElement("td");
-emailTd.textContent = sanitizeText(data.email || "-");
-
-/* ---------- ROLE ---------- */
-const roleTd = document.createElement("td");
-roleTd.appendChild(createBadge(data.role || "seller"));
-
-/* ---------- STATUS ---------- */
-const statusTd = document.createElement("td");
-const status = document.createElement("span");
-status.className = "status-badge";
-
-if (data.isActive === false) {
-  status.textContent = "Désactivé";
-  status.classList.add("inactive");
-} else {
-  status.textContent = "Actif";
-  status.classList.add("active");
-}
-statusTd.appendChild(status);
-
-/* ---------- ACTIONS ---------- */
-const actionsTd = document.createElement("td");
-actionsTd.className = "actions";
-
-      /* ---------- ACTIONS ---------- */
-
-      const actionsTd =
-        document.createElement("td");
-
-      actionsTd.className =
-        "actions";
-
-      /* ROLE BUTTON */
-
-      const roleBtn =
-        createButton(
-          "Changer rôle",
-          "btn-action"
-        );
-
-      roleBtn.addEventListener(
-        "click",
-        async () => {
-
-          try {
-
-            const nextRole =
-              data.role === "admin"
-                ? "seller"
-                : "admin";
-
-            await updateDoc(
-              doc(
-                db,
-                "users",
-                userId
-              ),
-              {
-                role: nextRole,
-                updatedAt:
-                  serverTimestamp()
-              }
-            );
-
-            showMessage(
-              "Rôle mis à jour"
-            );
-
-            loadUsers();
-
-          } catch (err) {
-
-            console.error(err);
-
-            alert(
-              "Erreur modification rôle"
-            );
-          }
-
-        }
-      );
-
-      /* STATUS BUTTON */
-
-      const statusBtn =
-        createButton(
-          data.isActive === false
-            ? "Activer"
-            : "Désactiver",
-          data.isActive === false
-            ? "btn-success"
-            : "btn-warning"
-        );
-
-      statusBtn.addEventListener(
-        "click",
-        async () => {
-
-          try {
-
-            await updateDoc(
-              doc(
-                db,
-                "users",
-                userId
-              ),
-              {
-                isActive:
-                  data.isActive === false,
-                updatedAt:
-                  serverTimestamp()
-              }
-            );
-
-            showMessage(
-              "Utilisateur mis à jour"
-            );
-
-            loadUsers();
-
-          } catch (err) {
-
-            console.error(err);
-
-            alert(
-              "Erreur statut utilisateur"
-            );
-          }
-
-        }
-      );
-
-      /* DELETE BUTTON */
-
-      const deleteBtn =
-        createButton(
-          "Supprimer",
-          "btn-danger"
-        );
-
-      deleteBtn.addEventListener(
-        "click",
-        async () => {
-
-          if (
-            userId === currentUserId
-          ) {
-
-            alert(
-              "Impossible de supprimer ton compte"
-            );
-
-            return;
-          }
-
-          const confirmDelete =
-            confirm(
-              "Supprimer cet utilisateur ?"
-            );
-
-          if (!confirmDelete) {
-            return;
-          }
-
-          try {
-
-            await deleteDoc(
-              doc(
-                db,
-                "users",
-                userId
-              )
-            );
-
-            showMessage(
-              "Utilisateur supprimé"
-            );
-
-            loadUsers();
-
-          } catch (err) {
-
-            console.error(err);
-
-            alert(
-              "Erreur suppression"
-            );
-          }
-
-        }
-      );
-
-      /* ---------- APPEND ---------- */
-      actionsTd.appendChild(roleBtn);
-actionsTd.appendChild(statusBtn);
-actionsTd.appendChild(deleteBtn);
-
-/* ---------- APPEND ---------- */
-tr.appendChild(nameTd);
-tr.appendChild(emailTd);   // <-- ajoute ça
-tr.appendChild(roleTd);
-tr.appendChild(statusTd);  // <-- remet ça à la bonne place
-tr.appendChild(actionsTd);
-
-usersTableBody.appendChild(tr);
-
-
+    showLoading(true);  
+
+    usersTableBody.replaceChildren();  
+
+    const snapshot =  
+      await getDocs(usersCollection);  
+
+    if (snapshot.empty) {  
+
+      showEmpty(true);  
+
+      showLoading(false);  
+
+      return;  
+    }  
+
+    showEmpty(false);  
+
+    snapshot.forEach((docSnap) => {  
+
+      const data = docSnap.data();  
+      const userId = docSnap.id;  
+      const tr = document.createElement("tr");  
+
+      /* ---------- NAME ---------- */  
+      const nameTd = document.createElement("td");  
+      nameTd.textContent = sanitizeText(data.name || "-");  
+
+      /* ---------- EMAIL ---------- */  
+      const emailTd = document.createElement("td");  
+      emailTd.textContent = sanitizeText(data.email || "-");  
+
+      /* ---------- ROLE ---------- */  
+      const roleTd = document.createElement("td");  
+      roleTd.appendChild(createBadge(data.role || "seller"));  
+
+      /* ---------- STATUS ---------- */  
+      const statusTd = document.createElement("td");  
+      const status = document.createElement("span");  
+      status.className = "status-badge";  
+
+      if (data.isActive === false) {  
+        status.textContent = "Désactivé";  
+        status.classList.add("inactive");  
+      } else {  
+        status.textContent = "Actif";  
+        status.classList.add("active");  
+      }  
+      statusTd.appendChild(status);  
+
+      /* ---------- ACTIONS ---------- */  
+      const actionsTd = document.createElement("td");  
+      actionsTd.className = "actions";  
+
+      /* ROLE BUTTON */  
+      const roleBtn = createButton("Changer rôle", "btn-action");  
+      roleBtn.addEventListener("click", async () => {  
+        try {  
+          const nextRole = data.role === "admin" ? "seller" : "admin";  
+          await updateDoc(doc(db, "users", userId), {  
+            role: nextRole,  
+            updatedAt: serverTimestamp()  
+          });  
+          showMessage("Rôle mis à jour");  
+          loadUsers();  
+        } catch (err) {  
+          console.error(err);  
+          alert("Erreur modification rôle");  
+        }  
+      });  
+
+      /* STATUS BUTTON */  
+      const statusBtn = createButton(
+        data.isActive === false ? "Activer" : "Désactiver",
+        data.isActive === false ? "btn-success" : "btn-warning"
+      );  
+      statusBtn.addEventListener("click", async () => {  
+        try {  
+          await updateDoc(doc(db, "users", userId), {  
+            isActive: data.isActive === false,  
+            updatedAt: serverTimestamp()  
+          });  
+          showMessage("Utilisateur mis à jour");  
+          loadUsers();  
+        } catch (err) {  
+          console.error(err);  
+          alert("Erreur statut utilisateur");  
+        }  
+      });  
+
+      /* DELETE BUTTON */  
+      const deleteBtn = createButton("Supprimer", "btn-danger");  
+      deleteBtn.addEventListener("click", async () => {  
+        if (userId === currentUserId) {  
+          alert("Impossible de supprimer ton compte");  
+          return;  
+        }  
+        const confirmDelete = confirm("Supprimer cet utilisateur ?");  
+        if (!confirmDelete) return;  
+
+        try {  
+          await deleteDoc(doc(db, "users", userId));  
+          showMessage("Utilisateur supprimé");  
+          loadUsers();  
+        } catch (err) {  
+          console.error(err);  
+          alert("Erreur suppression");  
+        }  
+      });  
+
+      actionsTd.appendChild(roleBtn);  
+      actionsTd.appendChild(statusBtn);  
+      actionsTd.appendChild(deleteBtn);  
+
+      /* ---------- APPEND ---------- */  
+      tr.appendChild(nameTd);  
+      tr.appendChild(emailTd);   // <-- ajouté
+      tr.appendChild(roleTd);  
+      tr.appendChild(statusTd);  
+      tr.appendChild(actionsTd); // <-- ordre corrigé
+
+      usersTableBody.appendChild(tr);  
     });
 
   } catch (err) {
 
-    console.error(err);
-
-    alert(
-      "Erreur chargement utilisateurs"
-    );
+    console.error(err);  
+    alert("Erreur chargement utilisateurs");
 
   } finally {
 
