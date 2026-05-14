@@ -1,4 +1,4 @@
-// js/ranking.js
+// js/ranging.js
 
 import {
   db,
