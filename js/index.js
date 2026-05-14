@@ -537,6 +537,7 @@ async function processSaleOnline(data) {
   const {
     cart,
     userId,
+    name,
     sellerId,
     payment,
     saleDate,
@@ -636,6 +637,8 @@ async function processSaleOnline(data) {
       tx.set(debtRef, {
         genre: "debt",
         category: "debt",
+        reason: "debt",
+        name : name,
         amount: payment.amount_remaining,
         amount_total: totalAmount,
         amount_paid: payment.amount_paid,
@@ -675,6 +678,8 @@ sellBtn.addEventListener('click', async () => {
 
     const paymentMode = paymentType.value;
 
+    const name = (clientNameInput?.value || "").trim() || "Client inconnu";
+
     const payment = computePayment(
       totalAmount,
       paymentMode,
@@ -693,6 +698,7 @@ sellBtn.addEventListener('click', async () => {
     const payload = {
       cart: structuredClone(cart),
       sellerId: currentUserId,
+      name,
       payment,
       saleDate,
       totalAmount,
