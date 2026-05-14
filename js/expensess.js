@@ -570,34 +570,67 @@ async function modifyFunc(id){
   }
 
   // ================= DEBT =================
-
 else if(item.genre === "debt"){
-  const pay = Number(prompt("Montant payé"));
 
-  if(isNaN(pay) || pay <= 0) return;
+  // 🔒 dette déjà payée
+  if (
+    item.status === "paid" ||
+    Number(item.amount_remaining || 0) <= 0
+  ) {
+    alert("Dette déjà payée");
+    return;
+  }
 
-  const debtRef = doc(db, "expensess", id);
+  const pay =
+    Number(prompt("Montant payé"));
+
+  if (isNaN(pay) || pay <= 0) {
+    return;
+  }
+
+  const debtRef =
+    doc(db, "expensess", id);
 
   await runTransaction(db, async (tx) => {
 
-    const debtSnap = await tx.get(debtRef);
-    if (!debtSnap.exists()) throw new Error("Dette introuvable");
+    const debtSnap =
+      await tx.get(debtRef);
+
+    if (!debtSnap.exists()) {
+      throw new Error("Dette introuvable");
+    }
 
     const d = debtSnap.data();
 
-    const currentPaid = Number(d.amount_paid || 0);
-    const total = Number(d.amount_total || 0);
+    // 🔒 sécurité transaction
+    if (
+      d.status === "paid" ||
+      Number(d.amount_remaining || 0) <= 0
+    ) {
+      throw new Error("Dette déjà payée");
+    }
 
-    const newPaid = currentPaid + pay;
+    const currentPaid =
+      Number(d.amount_paid || 0);
 
-    if(newPaid > total){
+    const total =
+      Number(d.amount_total || 0);
+
+    const newPaid =
+      currentPaid + pay;
+
+    if (newPaid > total) {
       throw new Error("Paiement dépasse la dette");
     }
 
-    const remaining = total - newPaid;
-    const status = remaining > 0 ? "partial" : "paid";
+    const remaining =
+      total - newPaid;
 
-    // ✅ UPDATE DETTE
+    const status =
+      remaining > 0
+        ? "partial"
+        : "paid";
+
     tx.update(debtRef, {
       amount_paid: newPaid,
       amount_remaining: remaining,
@@ -605,32 +638,26 @@ else if(item.genre === "debt"){
       updatedAt: Timestamp.now()
     });
 
-    // ✅ UPDATE SALE SI LIÉE
-    if(d.relatedSaleId){
-      const saleRef = doc(db, "sales", d.relatedSaleId);
-      const saleSnap = await tx.get(saleRef);
+    // 🔄 sync sales venant index.js
+    if (d.relatedSaleId) {
 
-      if(saleSnap.exists()){
-        const s = saleSnap.data();
+      const saleRef =
+        doc(db, "sales", d.relatedSaleId);
 
-        const salePaid = Number(s.amount_paid || 0) + pay;
-        const saleTotal = Number(s.total_amount || 0);
+      tx.update(saleRef, {
+        amount_paid: newPaid,
+        amount_remaining: remaining,
+        payment_status: status,
+        hasDebt: remaining > 0,
+        updatedAt: Timestamp.now()
+      });
 
-        const saleRemaining = saleTotal - salePaid;
-        const saleStatus = saleRemaining > 0 ? "partial" : "paid";
-
-        tx.update(saleRef, {
-          amount_paid: salePaid,
-          amount_remaining: saleRemaining,
-          payment_status: saleStatus,
-          hasDebt: saleRemaining > 0,
-          updatedAt: Timestamp.now()
-        });
-      }
     }
+
   });
 
   debug("Paiement ajouté (sync OK)");
+
   await loadData();
 }
 }
