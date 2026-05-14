@@ -537,13 +537,19 @@ async function modifyFunc(id){
     });
     
     // après stock update
-await updateDoc(doc(db, "expensess", id), {
-  updatedAt: Timestamp.now(),
-  correction: {
-    qty,
-    correctedAt: Timestamp.now(),
-    correctedBy: currentUserId
-  }
+    await addDoc(collection(db, "expensess"), {
+  genre: "loss",
+  reason: "correction",
+  category: "product_loss_correction",
+  amount: qty * priceBuy,
+  relatedTo: productId,
+  relatedExpenseId: id,
+  createdAt: Timestamp.now(),
+  createdBy: currentUserId
+});
+    await updateDoc(doc(db, "expensess", id), {
+  status: "cancelled",
+  updatedAt: Timestamp.now()
 });
 
     debug("Correction perte OK");
