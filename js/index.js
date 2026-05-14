@@ -644,6 +644,7 @@ async function processSaleOnline(data) {
         amount_paid: payment.amount_paid,
         amount_remaining: payment.amount_remaining,
         status: "partial",
+        isSystemCorrection: false,
         relatedSaleId: saleRef.id,
         createdAt: serverTimestamp()
       });
