@@ -1,8 +1,7 @@
 // expenses v1
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-
 import {
-  getFirestore,
+  db,
+  auth,
   collection,
   addDoc,
   getDocs,
@@ -10,26 +9,11 @@ import {
   updateDoc,
   query,
   orderBy,
-  Timestamp
-} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
-import { runTransaction } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+  Timestamp,
+  runTransaction
+} from "./firebase.js";
 
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyAwY95NM8QKiRxNHvfxiGrjvhKG16Lpl5E",
-    authDomain: "test-stockflow-offline.firebaseapp.com",
-    projectId: "test-stockflow-offline",
-    storageBucket: "test-stockflow-offline.firebasestorage.app",
-    messagingSenderId: "721689942624",
-    appId: "1:721689942624:web:a29d362e5fccd7e2ce4105",
-    measurementId: "G-67C96ZB39P"
-  };
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const auth = getAuth();
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 
 let currentUserId = null;
 let allData = [];
