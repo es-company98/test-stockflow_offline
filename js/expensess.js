@@ -1,7 +1,6 @@
 // expenses v1
 import {
   db,
-  auth,
   collection,
   addDoc,
   getDocs,
@@ -13,7 +12,9 @@ import {
   runTransaction
 } from "./firebase.js";
 
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+
+const auth = getAuth();
 
 let currentUserId = null;
 let allData = [];
