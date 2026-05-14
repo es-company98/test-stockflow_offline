@@ -1,0 +1,343 @@
+// stats.js v1
+import { db } from "./firebase.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+
+import { jsPDF } from "https://esm.sh/jspdf@2.5.1";
+import html2canvas from "https://esm.sh/html2canvas@1.4.1";
+
+const el = (id) => document.getElementById(id);
+const n = (v) => Number(v) || 0;
+
+/* =========================
+   DEBUG
+========================= */
+let debugTimer;
+
+function debug(msg) {
+  const box = el("debug");
+  if (!box) return;
+
+  box.textContent = msg;
+
+  clearTimeout(debugTimer);
+  debugTimer = setTimeout(() => {
+    box.textContent = "";
+  }, 60000);
+}
+
+/* =========================
+   STATE
+========================= */
+let ready = false;
+
+/* =========================
+   AUTH
+========================= */
+const auth = getAuth();
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    location.href = "login.html";
+    return;
+  }
+
+  debug("🔄 Chargement...");
+  await load();
+});
+
+/* =========================
+   LOAD
+========================= */
+async function load() {
+  try {
+
+    const [salesSnap, expSnap, stockSnap, prodSnap] = await Promise.all([
+      getDocs(collection(db, "sales")),
+      getDocs(collection(db, "expensess")),
+      getDocs(collection(db, "stock_movements")),
+      getDocs(collection(db, "products"))
+    ]);
+
+    const sales = salesSnap.docs.map(d => d.data() || {});
+    const expenses = expSnap.docs.map(d => d.data() || {});
+    const stock = stockSnap.docs.map(d => d.data() || {});
+    const products = prodSnap.docs.map(d => d.data() || {});
+
+    render(sales, expenses, stock, products);
+
+    ready = true;
+    el("pdfBtn").disabled = false;
+
+    debug("✅ Dashboard prêt");
+
+  } catch (e) {
+    debug("❌ " + e.message);
+  }
+}
+
+/* =========================
+   TEMPORARILY 
+========================= */
+function getDateSafe(v){
+  if(!v) return null;
+
+  if(v.toDate) return v.toDate(); // Firestore Timestamp
+
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function isToday(date){
+  const d = new Date(date);
+  const now = new Date();
+  return d.toDateString() === now.toDateString();
+}
+
+function isThisWeek(date){
+  const d = new Date(date);
+  const now = new Date();
+
+  const first = new Date(now.setDate(now.getDate() - now.getDay()));
+  const last = new Date(first);
+  last.setDate(first.getDate() + 6);
+
+  return d >= first && d <= last;
+}
+
+function isThisMonth(date){
+  const d = new Date(date);
+  const now = new Date();
+  return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+}
+
+function isThisYear(date){
+  const d = new Date(date);
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear();
+}
+
+
+function drawChart(data){
+  const canvas = document.getElementById("chart");
+  const ctx = canvas.getContext("2d");
+
+  const keys = Object.keys(data).sort();
+  const values = keys.map(k => data[k]);
+
+  const max = Math.max(...values, 1);
+
+  const w = canvas.width;
+  const h = canvas.height;
+
+  ctx.clearRect(0,0,w,h);
+
+  const stepX = keys.length ? w / keys.length : 1;
+
+  ctx.beginPath();
+
+  values.forEach((v,i)=>{
+    const x = i * stepX;
+    const y = h - (v/max)*h;
+
+    if(i===0) ctx.moveTo(x,y);
+    else ctx.lineTo(x,y);
+  });
+
+  ctx.stroke();
+  ctx.strokeStyle = "#0B5FFF";
+  ctx.lineWidth = 2;
+}
+
+/* =========================
+   RENDER
+========================= */
+function render(sales, expenses, stock, products) {
+
+  const stockValue = products.reduce((total, p) => {
+    return total + (n(p.price_buy) * n(p.stock_current));
+  }, 0);
+  
+  const caToday = sales.reduce((a,s)=>{
+  const d = getDateSafe(s.createdAt);
+  if(!d || !isToday(d)) return a;
+  return a + n(s.total_amount);
+},0);
+
+const caWeek = sales.reduce((a,s)=>{
+  const d = getDateSafe(s.createdAt);
+  if(!d || !isThisWeek(d)) return a;
+  return a + n(s.total_amount);
+},0);
+
+const caMonth = sales.reduce((a,s)=>{
+  const d = getDateSafe(s.createdAt);
+  if(!d || !isThisMonth(d)) return a;
+  return a + n(s.total_amount);
+},0);
+
+const caYear = sales.reduce((a,s)=>{
+  const d = getDateSafe(s.createdAt);
+  if(!d || !isThisYear(d)) return a;
+  return a + n(s.total_amount);
+},0);
+
+const chartData = {};
+
+sales.forEach(s => {
+  if(!s.createdAt?.toDate) return;
+
+  const d = s.createdAt.toDate();
+  const key = d.toISOString().slice(0,10);
+
+  chartData[key] = (chartData[key] || 0) + n(s.total_amount);
+});
+
+  const totalSales = sales.reduce(
+  (a, s) =>
+    a + n(s.amount_paid ?? s.total_amount),0);
+
+  const totalProfit = sales.reduce((a, s) =>
+    a + n(s.total_profit || s.profit)
+  , 0);
+
+  // ✅ FILTER PROPRE
+  const totalExpenses = expenses
+    .filter(e => e.genre === "expense")
+    .reduce((a, e) => a + n(e.amount), 0);
+
+  const totalDebts = expenses
+    .filter(e => e.genre === "debt")
+    .reduce((a, e) => a + n(e.amount_remaining), 0);
+
+  const totalLosses = expenses
+    .filter(e => e.genre === "loss")
+    .reduce((a, e) => a + n(e.amount), 0);
+
+  const stockIn = stock
+    .filter(s => s.type === "IN")
+    .reduce((a, s) => a + n(s.quantity), 0);
+
+  const stockOut = stock
+    .filter(s => s.type === "OUT")
+    .reduce((a, s) => a + n(s.quantity), 0);
+
+  const stockTotal = stockIn - stockOut;
+
+  const netReal =  totalProfit -  totalExpenses -   totalLosses;
+
+  el("stockValue").textContent = stockValue + " FC";
+  el("sales").textContent = totalSales + " FC";
+  el("profit").textContent = netReal + " FC";
+  el("profitIdeal").textContent = totalProfit + " FC";
+  el("losses").textContent = totalLosses + " FC";
+  el("debts").textContent = totalDebts + " FC"; 
+  el("expenses").textContent = totalExpenses + " FC";
+  el("sold").textContent = sales.length;
+  el("stockTotal").textContent = stockTotal;
+  el("products").textContent = products.length;
+  el("caToday").textContent = caToday + " FC";
+el("caWeek").textContent = caWeek + " FC";
+el("caMonth").textContent = caMonth + " FC";
+el("caYear").textContent = caYear + " FC";
+drawChart(chartData);
+
+  debug("✅ OK");
+}
+
+/* =========================
+   PDF (CLEAN MODULE ONLY)
+========================= */
+el("pdfBtn").disabled = true;
+
+function generateId() {
+  return "dev" + Date.now().toString(36).toUpperCase();
+}
+
+function formatDate() {
+  return new Date().toLocaleString("fr-FR", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  });
+}
+
+el("pdfBtn").addEventListener("click", async () => {
+
+  if (!ready) {
+    debug("⏳ Chargement...");
+    return;
+  }
+
+  try {
+
+    const grid = document.querySelector(".grid");
+    const body = document.body;
+
+    // 🔥 SAVE STATE
+    const oldGridWidth = grid.style.width;
+    const oldGridMax = grid.style.maxWidth;
+    const oldOverflow = body.style.overflow;
+    const oldHeight = body.style.height;
+
+    // 🔥 FORCE FULL VIEW (clé PDF propre)
+    body.style.overflow = "visible";
+    body.style.height = "auto";
+
+    grid.style.width = "1000px";
+    grid.style.maxWidth = "1000px";
+
+    // 🔥 attendre repaint DOM
+    await new Promise(r => requestAnimationFrame(r));
+
+    const canvas = await html2canvas(grid, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      scrollY: 0
+    });
+
+    // 🔁 RESTORE UI
+    grid.style.width = oldGridWidth;
+    grid.style.maxWidth = oldGridMax;
+    body.style.overflow = oldOverflow;
+    body.style.height = oldHeight;
+
+    const img = canvas.toDataURL("image/png");
+
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const id = generateId();
+    const date = formatDate();
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(16);
+    pdf.text("Es-Shop Invoice Report", 14, 18);
+
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`ID: ${id}`, 14, 26);
+    pdf.text(`Date: ${date}`, 14, 32);
+
+    pdf.setDrawColor(200);
+    pdf.rect(160, 10, 35, 20);
+    pdf.text("ES-SHOP", 172, 22);
+
+    const w = 190;
+    const h = (canvas.height * w) / canvas.width;
+
+    pdf.addImage(img, "PNG", 10, 40, w, h);
+
+    pdf.setFontSize(8);
+    pdf.setTextColor(120);
+    pdf.text("Generated by Es-Shop System", 14, 285);
+
+    pdf.save(`es-shop-${id}.pdf`);
+
+    debug("📄 PDF généré");
+
+  } catch (e) {
+    debug("❌ PDF: " + e.message);
+  }
+
+});
+  
