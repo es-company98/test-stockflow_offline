@@ -4,24 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="
-default-src 'self';
-script-src 'self' https://www.gstatic.com https://esm.sh;
-style-src 'self' 'unsafe-inline';
-img-src 'self' data: https:;
-connect-src 'self' 
-  https://*.googleapis.com 
-  https://*.firebaseio.com 
-  https://*.gstatic.com 
-  https://firestore.googleapis.com 
-  https://identitytoolkit.googleapis.com 
-  https://securetoken.googleapis.com;
-font-src 'self' https://fonts.gstatic.com;
-frame-src 'self' https://*.firebaseapp.com https://accounts.google.com;
-worker-src 'self';
-base-uri 'self';
-form-action 'self' https://wa.me;
-">
+
 <title>Gestion des Dépenses</title>
 
 <style>
@@ -430,6 +413,7 @@ function debug(msg) {
 
   setTimeout(() => box.textContent = "", 5000);
 }
+
 function setLoading(state) {
   list.replaceChildren();
 
@@ -510,6 +494,7 @@ function getFiltered() {
     return matchSearch && matchCategory && matchDate;
   });
 }
+
 
 // ================= RENDER =================
 function render(page = 1) {
@@ -976,3 +961,4 @@ onAuthStateChanged(auth, async (user) => {
 
 </body>
 </html>
+  
