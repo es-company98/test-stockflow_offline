@@ -48,10 +48,9 @@ async function checkUser(uid) {
     throw new Error("Compte désactivé");
   }
 
-  if (!["admin", "seller"].includes(userData.role)) {
-    throw new Error("Accès refusé");
+  if (userData.role !== "admin") {
+  throw new Error("Accès refusé");
   }
-
   return userData;
 }
 
