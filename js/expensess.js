@@ -514,18 +514,20 @@ async function modifyFunc(id){
   // ================= LOSS =================
   if(item.genre === "loss"){
     // ❌ BLOQUER CORRECTION D’UNE CORRECTION
-  if(item.reason === "correction" || item.reason=== "correction_loss", || item.category === "product_loss_correction"){
-    alert("Impossible de corriger une correction");
-    return;
-  }
+  if (item.isSystemCorrection === true) {
+  alert("Impossible de corriger une correction");
+  return;
+    }
+   
     const qty = Number(prompt("Quantité à corriger (+ uniquement)"));
 
     if(isNaN(qty) || qty <= 0) return;
 
     const productId = item.relatedTo;
     const product = allProducts.find(p => p.id === productId);
-    const priceBuy = Number(product.price_buy || 0);
     if (!product) return alert("Produit introuvable");
+    
+    const priceBuy = Number(product.price_buy || 0);
 
     // mouvement inverse
     await addDoc(collection(db, "stock_movements"), {
@@ -543,11 +545,12 @@ async function modifyFunc(id){
       stock_current: Number(product.stock_current || 0) + qty
     });
     
-    // après stock update
+    // correction de perte
     await addDoc(collection(db, "expensess"), {
   genre: "loss",
   reason: "correction",
   category: "product_loss_correction",
+  isSystemCorrection: true,
   amount: qty * priceBuy,
   relatedTo: productId,
   relatedExpenseId: id,
