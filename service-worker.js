@@ -1,7 +1,7 @@
-const CACHE_NAME = "stockflow-v2";
+const CACHE_NAME = "stockflow-v3";
 
 /* =========================
-   CORE OFFLINE FILES
+   CORE OFFLINE FILES 
 ========================= */
 
 const CORE_ASSETS = [
@@ -136,6 +136,44 @@ self.addEventListener(
     ) {
       return;
     }
+    
+    /* ---------- permit ---------- */
+    
+    if (
+  request.url.startsWith("https://www.gstatic.com") ||
+  request.url.startsWith("https://esm.sh")
+) {
+
+  event.respondWith(
+
+    caches.open(CACHE_NAME).then(async cache => {
+
+      const cached = await cache.match(request);
+
+      if (cached) {
+        return cached;
+      }
+
+      try {
+
+        const response = await fetch(request);
+
+        cache.put(request, response.clone());
+
+        return response;
+
+      } catch {
+
+        return cached;
+
+      }
+
+    })
+
+  );
+
+  return;
+}
 
     /* ---------- Firebase ---------- */
 
@@ -245,4 +283,3 @@ self.addEventListener(
 
   }
 );
-
