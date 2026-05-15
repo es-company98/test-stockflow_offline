@@ -1,4 +1,4 @@
-// js/ranging.js pro cote
+// js/ranging.js vraie côte pro 
 
 import {
   db,
@@ -201,9 +201,11 @@ async function loadRanking() {
 // comparaison produit vs meilleur produit
 const maxQuantity = Math.max(...map.values());
 
-let score = maxQuantity > 0
-  ? (quantity / maxQuantity) * 9.8
+const ratio = maxQuantity > 0
+  ? quantity / maxQuantity
   : 0;
+
+let score = Math.pow(ratio, 2.2) * 9.8;
 
 // minimum visuel
 if (score > 0 && score < 1) {
@@ -222,15 +224,26 @@ if (score > 0 && score < 1) {
     })
     .sort((a, b) => b.quantity - a.quantity);
 
-  const topFive = ranking.slice(0, 5);
-  const lowFive = ranking
+  const topCount = Math.min(
+  5,
+  Math.ceil(ranking.length / 2)
+);
+
+const lowCount = Math.min(
+  5,
+  Math.floor(ranking.length / 2)
+);
+
+const topFive = ranking.slice(0, topCount);
+
+const lowFive = ranking
+  .slice(-lowCount)
+  .reverse()
   .filter(item =>
     !topFive.some(top =>
       top.productId === item.productId
     )
-  )
-  .slice(-5)
-  .reverse();
+  );
 
   if (!topFive.length) {
     showEmpty(topContainer, "Top indisponible");
