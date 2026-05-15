@@ -1,4 +1,4 @@
-// js/ranging.js
+// js/ranging.js pro cote
 
 import {
   db,
@@ -50,7 +50,8 @@ async function checkUser(uid) {
 
   if (userData.role !== "admin") {
   throw new Error("Accès refusé");
-  }
+    }
+
   return userData;
 }
 
@@ -153,7 +154,7 @@ async function loadRanking() {
   clearContainer(lowContainer);
 
   const saleItemsSnap = await getDocs(
-    query(collection(db, "sale_items"), limit(5000))
+    query(collection(db, "sale_items"), limit(500))
   );
 
   if (saleItemsSnap.empty) {
@@ -194,23 +195,42 @@ async function loadRanking() {
       const product = productsMap.get(productId) || {};
 
       const percent = totalSold
-        ? (quantity / totalSold) * 100
-        : 0;
+  ? (quantity / totalSold) * 100
+  : 0;
 
-      const score = Math.min(10, percent);
+// comparaison produit vs meilleur produit
+const maxQuantity = Math.max(...map.values());
+
+let score = maxQuantity > 0
+  ? (quantity / maxQuantity) * 9.8
+  : 0;
+
+// minimum visuel
+if (score > 0 && score < 1) {
+  score = 1;
+}
 
       return {
         productId,
         name: sanitizeText(product.name || "Produit inconnu"),
         quantity,
         percent: Number(percent.toFixed(1)),
-        score: Number(score.toFixed(1))
+        score: Number(
+  Math.min(score, 9.8).toFixed(1)
+)
       };
     })
     .sort((a, b) => b.quantity - a.quantity);
 
   const topFive = ranking.slice(0, 5);
-  const lowFive = [...ranking].slice(-5).reverse();
+  const lowFive = ranking
+  .filter(item =>
+    !topFive.some(top =>
+      top.productId === item.productId
+    )
+  )
+  .slice(-5)
+  .reverse();
 
   if (!topFive.length) {
     showEmpty(topContainer, "Top indisponible");
