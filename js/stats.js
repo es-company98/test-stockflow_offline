@@ -1,7 +1,5 @@
 // stats.js v1 milite role
-import { db } from "./firebase.js";
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
-import { getDoc, doc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+import { db, collection, getDocs, getDoc, doc} from "./firebase.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 
 import { jsPDF } from "https://esm.sh/jspdf@2.5.1";
