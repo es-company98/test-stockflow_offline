@@ -1,6 +1,7 @@
-// stats.js v1
+// stats.js v1 milite role
 import { db } from "./firebase.js";
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+import { getDoc, doc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 
 import { jsPDF } from "https://esm.sh/jspdf@2.5.1";
@@ -35,19 +36,19 @@ let ready = false;
    AUTH
 ========================= */
 const auth = getAuth();
+let currentUser = null;
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     location.href = "login.html";
     return;
   }
-   
-if (userData.role !== "admin") {
-  throw new Error("Accès refusé");
-}
+
+  const snap = await getDoc(doc(db, "users", user.uid));
+  currentUser = snap.data();
+
   debug("🔄 Chargement...");
   await load();
-   
 });
 
 /* =========================
@@ -158,6 +159,26 @@ function drawChart(data){
 ========================= */
 function render(sales, expenses, stock, products) {
 
+if (!currentUser) return;
+if (currentUser?.role === "seller") {
+  const today = new Date();
+
+  sales = sales.filter(s => {
+    const d = getDateSafe(s.createdAt);
+    return d && isToday(d);
+  });
+
+  expenses = expenses.filter(e => {
+    const d = getDateSafe(e.createdAt);
+    return d && isToday(d);
+  });
+
+  stock = stock.filter(s => {
+    const d = getDateSafe(s.createdAt);
+    return d && isToday(d);
+  });
+}
+
   const stockValue = products.reduce((total, p) => {
     return total + (n(p.price_buy) * n(p.stock_current));
   }, 0);
@@ -266,6 +287,11 @@ function formatDate() {
 }
 
 el("pdfBtn").addEventListener("click", async () => {
+    
+    if (currentUser?.role !== "admin") {
+    alert("Accès refusé");
+    return;
+  }
 
   if (!ready) {
     debug("⏳ Chargement...");
@@ -344,4 +370,4 @@ el("pdfBtn").addEventListener("click", async () => {
   }
 
 });
-  
+
