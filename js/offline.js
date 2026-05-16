@@ -13,6 +13,7 @@ export const DEVICE_KEY = "offline_device_id";
 let deferredPrompt = null;
 let offlineBanner = null;
 let isSyncing = false;
+let syncToast = null;
 
 /* =========================
    DEVICE ID
@@ -226,6 +227,119 @@ export function hideOfflineWarning() {
 
 }
 
+export function showSyncToast(message, type = "info") {
+
+  if (syncToast) {
+
+    syncToast.remove();
+
+    syncToast = null;
+
+  }
+
+  const div =
+    document.createElement("div");
+
+  div.setAttribute(
+    "id",
+    "sync-toast"
+  );
+
+  div.textContent = message;
+
+  div.style.position = "fixed";
+
+  div.style.bottom = "18px";
+
+  div.style.left = "50%";
+
+  div.style.transform =
+    "translateX(-50%)";
+
+  div.style.maxWidth = "420px";
+
+  div.style.width =
+    "calc(100% - 24px)";
+
+  div.style.padding =
+    "12px 16px";
+
+  div.style.borderRadius =
+    "14px";
+
+  div.style.fontSize = "13px";
+
+  div.style.fontWeight = "700";
+
+  div.style.lineHeight = "1.4";
+
+  div.style.textAlign = "center";
+
+  div.style.zIndex = "999999";
+
+  div.style.boxShadow =
+    "0 6px 18px rgba(0,0,0,0.18)";
+
+  div.style.backdropFilter =
+    "blur(6px)";
+
+  div.style.transition =
+    "opacity 0.25s ease";
+
+  if (type === "success") {
+
+    div.style.background =
+      "rgba(46,204,113,0.96)";
+
+    div.style.color = "#fff";
+
+  } else if (type === "error") {
+
+    div.style.background =
+      "rgba(231,76,60,0.96)";
+
+    div.style.color = "#fff";
+
+  } else if (type === "warning") {
+
+    div.style.background =
+      "rgba(243,156,18,0.96)";
+
+    div.style.color = "#111";
+
+  } else {
+
+    div.style.background =
+      "rgba(52,152,219,0.96)";
+
+    div.style.color = "#fff";
+
+  }
+
+  document.body.appendChild(div);
+
+  syncToast = div;
+
+  setTimeout(() => {
+
+    div.style.opacity = "0";
+
+    setTimeout(() => {
+
+      if (div.parentNode) {
+        div.remove();
+      }
+
+      if (syncToast === div) {
+        syncToast = null;
+      }
+
+    }, 250);
+
+  }, 3200);
+
+}
+
 /* =========================
    OFFLINE PRODUCT SECURITY
 ========================= */
@@ -399,15 +513,14 @@ export async function syncQueue(handlers = {}) {
 
         }
 
-        await handler({
-          ...action.data,
-          offlineActionId: action.id,
-          deviceId: action.deviceId
-        });
-
         console.log(
-          `✅ Sync OK: ${action.type}`
-        );
+  `✅ Sync OK: ${action.type}`
+);
+
+showSyncToast(
+  `✅ Sync OK : ${action.type}`,
+  "success"
+);
 
       } catch (err) {
 
@@ -415,6 +528,11 @@ export async function syncQueue(handlers = {}) {
           "❌ Sync erreur:",
           err
         );
+        
+        showSyncToast(
+  `❌ Sync erreur : ${action.type}`,
+  "error"
+);
 
         remaining.push({
           ...action,
@@ -522,4 +640,5 @@ export function setupInstallButton(
 
     }
   );
+
 }
