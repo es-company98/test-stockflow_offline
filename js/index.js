@@ -2,13 +2,12 @@
 import { 
   db, collection, addDoc, getDoc, doc, updateDoc, Timestamp, getDocs, query, where, enableIndexedDbPersistence, runTransaction, serverTimestamp
 } from './firebase.js';
-
+ 
 import {
   registerServiceWorker,
   setupInstallButton,
   setupNetworkListeners,
   syncQueue,
-  saveOfflineSale,
   initOfflinePersistence,
   validateOfflineProduct,
   isOffline,
@@ -18,9 +17,6 @@ import {
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 import { generateReceipt } from "./receipt.js";
 
-
-// --- OFFLINE ---
-await initOfflinePersistence(enableIndexedDbPersistence);
 
 // --- DOM ---
 const paymentType = document.getElementById('paymentType');
@@ -477,7 +473,6 @@ function updateCartUI() {
       removeFromCart(item.productId);
 
     });
-
     // --- APPEND ---
     controls.appendChild(qtyInput);
     controls.appendChild(qtyOk);
@@ -491,14 +486,11 @@ function updateCartUI() {
     div.appendChild(controls);
 
     cartDom.insertBefore(div, cartTotalDom);
-
   });
-
+  
   cartTotalDom.textContent =
     `Total: ${total.toFixed(2)} FC`;
-
 }
-
 
 // calculator pour dettes 
 function computePayment(totalAmount, paymentMode, inputAmount) {
@@ -646,7 +638,7 @@ async function processSaleOnline(data) {
         status: "partial",
         isSystemCorrection: false,
         relatedSaleId: saleRef.id,
-        createdAt: serverTimestamp()
+        createdAt: Timestamp.fromMillis(saleDate)
       });
     }
 
@@ -708,15 +700,40 @@ sellBtn.addEventListener('click', async () => {
 
     // 🧠 OFFLINE FIRST
     if (isOffline()) {
+  addToQueue({
+    type: "SALE",
+    data: payload
+  });
 
-      saveOfflineSale(payload);
-      showOfflineWarning();
+  try {
 
-      cart = [];
-      updateCartUI();
+    await generateReceipt({
+      saleId: `OFFLINE-${Date.now()}`,
+      name,
+      items: cart.map(i => ({
+        name: i.name,
+        qty: i.qty,
+        price: i.price
+      })),
+      total: totalAmount,
+      amountPaid: payment.amount_paid,
+      remaining: payment.amount_remaining,
+      paymentMode: payment.payment_status,
+      date: new Date(saleDate),
+      offline: true
+    });
 
-      return;
-    }
+  } catch (err) {
+    console.warn("Receipt offline failed:", err);
+  }
+
+  showOfflineWarning();
+  alert("Vente sauvegardée offline");
+  cart = [];
+  updateCartUI();
+
+  return;
+}
 
     // 🧠 ONLINE SALE
     const saleId = await processSaleOnline(payload);
@@ -743,8 +760,6 @@ sellBtn.addEventListener('click', async () => {
       console.warn("Receipt failed:", err);
     }
 
-    await syncQueue(processSaleOnline);
-
     alert("Vente OK");
 
     cart = [];
@@ -767,15 +782,16 @@ onAuthStateChanged(auth, async (user) => {
   try {
       await checkUser(currentUserId);
       await loadProducts();
-      await syncQueue(processSaleOnline);
+      await syncQueue({SALE: processSaleOnline});
   } catch(e){
   alert(e.message);
     }
 });
 setupNetworkListeners(async () => {
 
-  await syncQueue(processSaleOnline);
-
+  setTimeout(() => {
+  syncQueue({SALE: processSaleOnline});
+  }, 500);
 });
 
 registerServiceWorker();
@@ -784,5 +800,4 @@ setupInstallButton();
 function resetPaymentUI() {
   amountPaidInput.value = "";
   amountPaidInput.style.display = "none";
-  }
-                                            
+}
