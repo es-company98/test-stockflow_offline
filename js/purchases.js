@@ -1,4 +1,4 @@
-// purchases.js - VERSION FINALE PRO  (+ filtre côté client bon à <300 produits) + OFFLINE
+// purchases.js - VERSION FINALE PRO  (+ filtre côté client bon à <300 produits) + vrai OFFLINE
 
 import { 
   db, collection, addDoc, getDocs, doc, updateDoc, query, where, serverTimestamp, getDoc, runTransaction 
@@ -8,7 +8,9 @@ import {
   isOffline,
   addToQueue,
   setupNetworkListeners,
-  updateNetworkBadge
+  updateNetworkBadge,
+  showSyncToast,
+  syncQueue
 } from "./offline.js";
 
 // --- AUTH ---
@@ -113,333 +115,314 @@ function debug(msg) {
 
 }
 
-// --- AJOUT ACHAT ---
-if (purchaseForm) {
-
-purchaseForm.addEventListener('submit', async (e) => {
-
-  e.preventDefault();
-
-  if (!currentUserId) {
-    alert("Utilisateur non connecté");
-    debug("Utilisateur non connecté");
-    return;
-  }
-
-  const supplier =
-    document.getElementById('supplierName')
-    ?.value
-    .trim();
-
-  const selectedProductId =
-    productSelect?.value || "";
-
-    const quantity =
-  parseInt(document.getElementById('quantity')?.value
-    );
-
-  const unitPriceRaw =
-    document.getElementById('unitPrice')?.value
-    ?.trim();
-
-  const unitPrice =
-    unitPriceRaw === ""
-      ? null
-      : Number(unitPriceRaw);
-
-  // --- VALIDATION ---
-  if (!supplier) {
-    alert("Fournisseur requis");
-    debug("Fournisseur manquant");
-    return;
-  }
-
-  if (!Number.isInteger(quantity) || quantity <= 0) {
-    alert("Quantité invalide");
-    debug("Quantité invalide");
-    return;
-  }
-
-  if (
-    unitPrice !== null &&
-    (!Number.isFinite(unitPrice) || unitPrice <= 0)
-  ) {
-    alert("Prix invalide");
-    debug("Prix achat invalide");
-    return;
-  }
-
-  try {
-      
-    const offlineMode = isOffline();
-    
-    /* =========================
-   OFFLINE PURCHASE
+/* =========================
+   PROCESS PURCHASE ONLINE
 ========================= */
 
-if (offlineMode) {
+async function processPurchaseOnline(data) {
 
-  if (
-    !selectedProductId ||
-    selectedProductId === "new"
-  ) {
+  const {
+    supplier,
+    productId,
+    quantity,
+    unitPrice,
+    createdBy
+  } = data;
 
-    throw new Error(
-      "Création produit impossible offline"
-    );
+  await checkUser(createdBy);
 
-  }
+  const now = serverTimestamp;
 
-  addToQueue({
+  const totalCost =
+    unitPrice !== null
+      ? quantity * unitPrice
+      : 0;
 
-    type: "PURCHASE",
-
-    data: {
+  const purchaseRef =
+    await addDoc(purchasesCol, {
 
       supplier,
 
-      productId:
-        selectedProductId,
+      total_cost: totalCost,
 
-      quantity,
-
-      unitPrice,
-
-      createdBy:
-        currentUserId,
-
-      createdAt:
-        Date.now()
-
-    }
-
-  });
-
-  debug(
-    "📦 Achat sauvegardé offline"
-  );
-
-  purchaseForm.reset();
-
-  return;
-
-}
-
-    await checkUser(currentUserId);
-
-    const now = serverTimestamp;
-
-    let productId = null;
-    let productData = null;
-
-    /* =========================
-       PRODUIT EXISTANT
-    ========================= */
-
-    if (
-      selectedProductId &&
-      selectedProductId !== "new"
-    ) {
-
-      productId = selectedProductId;
-
-      productData =
-        allProducts.find(
-          p => p.id === selectedProductId
-        ) || null;
-
-      if (!productData) {
-        throw new Error("Produit introuvable");
-      }
-
-    }
-
-
-    /* =========================
-       ACHAT
-    ========================= */
-
-    const totalCost =
-      unitPrice !== null
-        ? quantity * unitPrice
-        : 0;
-
-    const purchaseRef =
-      await addDoc(purchasesCol, {
-
-        supplier,
-
-        total_cost: totalCost,
-
-        createdBy: currentUserId,
-
-        createdAt: now()
-
-      });
-
-    /* =========================
-       PURCHASE ITEM
-    ========================= */
-
-    await addDoc(purchaseItemsCol, {
-
-      purchaseId: purchaseRef.id,
-
-      productId,
-
-      quantity,
-
-      price: unitPrice,
+      createdBy,
 
       createdAt: now()
 
     });
 
-   /* =========================
-   STOCK TRANSACTION
-========================= */
+  await addDoc(purchaseItemsCol, {
 
-let diffExpense = 0;
-
-await runTransaction(db, async (tx) => {
-
-  const productRef =
-    doc(db, "products", productId);
-
-  const productSnap =
-    await tx.get(productRef);
-
-  if (!productSnap.exists()) {
-    throw new Error("Produit supprimé");
-  }
-
-  const productData =
-    productSnap.data();
-
-  const currentStock =
-    Number(
-      productData?.stock_current || 0
-    );
-
-  const oldBuyPrice =
-    Number(
-      productData?.price_buy || 0
-    );
-
-  const updateData = {
-
-    stock_current:
-      currentStock + quantity,
-
-    updatedAt: now()
-
-  };
-
-  /* =========================
-     UPDATE BUY PRICE
-  ========================= */
-
-  if (
-    unitPrice !== null &&
-    unitPrice > 0
-  ) {
-
-    updateData.price_buy =
-      unitPrice;
-
-    // différence achat
-    if (unitPrice > oldBuyPrice) {
-
-      diffExpense =
-        (unitPrice - oldBuyPrice)
-        * quantity;
-
-    }
-
-  }
-
-  tx.update(productRef, updateData);
-
-  /* =========================
-     STOCK MOVEMENT
-  ========================= */
-
-  const moveRef =
-    doc(stockMovementsCol);
-
-  tx.set(moveRef, {
+    purchaseId: purchaseRef.id,
 
     productId,
 
-    type: "IN",
-
     quantity,
 
-    reason: "purchase",
-
-    referenceId:
-      purchaseRef.id,
-
-    createdBy:
-      currentUserId,
+    price: unitPrice,
 
     createdAt: now()
 
   });
 
-});
+  let diffExpense = 0;
 
-/* =========================
-   EXPENSE
-========================= */
+  await runTransaction(db, async (tx) => {
 
-if (diffExpense > 0) {
+    const productRef =
+      doc(db, "products", productId);
 
-  await addDoc(
-    collection(db, "expenses"),
-    {
+    const productSnap =
+      await tx.get(productRef);
 
-      type: "purchase_diff",
+    if (!productSnap.exists()) {
 
-      amount: diffExpense,
+      throw new Error(
+        "Produit supprimé"
+      );
 
-      relatedPurchaseId:
+    }
+
+    const productData =
+      productSnap.data();
+
+    const currentStock =
+      Number(
+        productData?.stock_current || 0
+      );
+
+    const oldBuyPrice =
+      Number(
+        productData?.price_buy || 0
+      );
+
+    const updateData = {
+
+      stock_current:
+        currentStock + quantity,
+
+      updatedAt: now()
+
+    };
+
+    if (
+      unitPrice !== null &&
+      unitPrice > 0
+    ) {
+
+      updateData.price_buy =
+        unitPrice;
+
+      if (unitPrice > oldBuyPrice) {
+
+        diffExpense =
+          (unitPrice - oldBuyPrice)
+          * quantity;
+
+      }
+
+    }
+
+    tx.update(
+      productRef,
+      updateData
+    );
+
+    const moveRef =
+      doc(stockMovementsCol);
+
+    tx.set(moveRef, {
+
+      productId,
+
+      type: "IN",
+
+      quantity,
+
+      reason: "purchase",
+
+      referenceId:
         purchaseRef.id,
 
-      createdBy:
-        currentUserId,
+      createdBy,
 
       createdAt: now()
 
-    }
-  );
+    });
 
-}
+  });
 
-    debug("✅ Achat enregistré");
+  if (diffExpense > 0) {
 
-    purchaseForm.reset();
+    await addDoc(
+      collection(db, "expenses"),
+      {
 
-    await loadStock();
+        type: "purchase_diff",
 
-  } catch (err) {
+        amount: diffExpense,
 
-    console.error(err);
+        relatedPurchaseId:
+          purchaseRef.id,
 
-    debug(
-      err?.message ||
-      "Erreur achat"
-    );
+        createdBy,
 
-    alert(
-      err?.message ||
-      "Erreur lors de l'achat"
+        createdAt: now()
+
+      }
     );
 
   }
 
-});
+}
 
+// --- AJOUT ACHAT ---
+if (purchaseForm) {
+  purchaseForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!currentUserId) {
+      alert("Utilisateur non connecté");
+      debug("Utilisateur non connecté");
+      return;
+    }
+
+    const supplier =
+      document.getElementById('supplierName')
+      ?.value
+      .trim();
+
+    const selectedProductId =
+      productSelect?.value || "";
+
+    const quantity =
+      parseInt(
+        document.getElementById('quantity')?.value
+      );
+
+    const unitPriceRaw =
+      document.getElementById('unitPrice')
+      ?.value
+      ?.trim();
+
+    const unitPrice =
+      unitPriceRaw === ""
+        ? null
+        : Number(unitPriceRaw);
+
+    // --- VALIDATION ---
+    if (!supplier) {
+      alert("Fournisseur requis");
+      debug("Fournisseur manquant");
+      return;
+    }
+
+    if (
+      !selectedProductId ||
+      selectedProductId === "new"
+    ) {
+      alert("Produit invalide");
+      debug("Produit invalide");
+      return;
+    }
+
+    if (
+      !Number.isInteger(quantity) ||
+      quantity <= 0
+    ) {
+      alert("Quantité invalide");
+      debug("Quantité invalide");
+      return;
+    }
+
+    if (
+      unitPrice !== null &&
+      (
+        !Number.isFinite(unitPrice) ||
+        unitPrice <= 0
+      )
+    ) {
+      alert("Prix invalide");
+      debug("Prix achat invalide");
+      return;
+    }
+
+    try {
+
+      const productExists =
+        allProducts.some(
+          p => p.id === selectedProductId
+        );
+
+      if (!productExists) {
+        throw new Error(
+          "Produit introuvable"
+        );
+      }
+
+      /* =========================
+         OFFLINE PURCHASE
+      ========================= */
+
+      if (isOffline()) {
+
+        addToQueue({
+          type: "PURCHASE",
+          data: {
+            supplier,
+            productId: selectedProductId,
+            quantity,
+            unitPrice,
+            createdBy: currentUserId,
+            createdAt: Date.now()
+          }
+        });
+
+        debug(
+          "📦 Achat sauvegardé offline"
+        );
+
+        showSyncToast(
+          "📦 Achat sauvegardé hors ligne",
+          "warning"
+        );
+
+        purchaseForm.reset();
+
+        return;
+
+      }
+
+      /* =========================
+         ONLINE PURCHASE
+      ========================= */
+
+      await processPurchaseOnline({
+        supplier,
+        productId: selectedProductId,
+        quantity,
+        unitPrice,
+        createdBy: currentUserId
+      });
+
+      debug("✅ Achat enregistré");
+
+      purchaseForm.reset();
+
+      await loadStock();
+
+    } catch (err) {
+
+      console.error(err);
+      debug(
+        err?.message ||
+        "Erreur achat"
+      );
+      alert(
+        err?.message ||
+        "Erreur lors de l'achat"
+      );
+    }
+  });
 }
 
 // --- LOAD STOCK ---
@@ -449,6 +432,10 @@ async function loadStock() {
   if (isOffline()) 
   {
   debug("📴 Stock affiché depuis cache local" );
+  showSyncToast(
+  "📴 Stock affiché depuis cache local",
+  "warning"
+);
    }
 
   allProducts = [];
@@ -643,12 +630,34 @@ async function manualUpdate(productId) {
 }}
 
 /* ---   NETWORK INIT    --- */
-
+let isSyncing = false;
 updateNetworkBadge(
   navigator.onLine
 );
 
-setupNetworkListeners();
+setupNetworkListeners(async () => {
+  try {
+   if (isSyncing) return;
+isSyncing = true;
+
+try {
+  await syncQueue({
+    PURCHASE:processPurchaseOnline
+  });
+} finally {
+  isSyncing = false;
+}
+    await loadStock();
+    debug("🔄 Synchronisation terminée");
+  } catch(err) {
+
+    console.error(err);
+    debug(
+      err?.message ||
+      "Erreur synchronisation"
+    );
+  }
+});
 
 
 // --- INIT ---
@@ -661,7 +670,17 @@ onAuthStateChanged(auth, async (user) => {
   currentUserId = user.uid;
   try {
     await checkUser(currentUserId);
-    loadStock();
+    if (isSyncing) return;
+
+isSyncing = true;
+try {
+  await syncQueue({
+    PURCHASE:processPurchaseOnline
+  });
+} finally {
+  isSyncing = false;
+}
+    await loadStock();
   } catch (e) {
     alert(e.message);
   }
