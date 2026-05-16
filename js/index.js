@@ -12,7 +12,8 @@ import {
   initOfflinePersistence,
   validateOfflineProduct,
   isOffline,
-  showOfflineWarning
+  showOfflineWarning,
+  showSyncToast
 } from "./offline.js";
 
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
@@ -729,7 +730,10 @@ sellBtn.addEventListener('click', async () => {
   }
 
   showOfflineWarning();
-  alert("Vente sauvegardée offline");
+      showSyncToast(
+  "📦 Vente enregistrée hors ligne",
+  "warning"
+);
   cart = [];
   updateCartUI();
 
@@ -761,7 +765,10 @@ sellBtn.addEventListener('click', async () => {
       console.warn("Receipt failed:", err);
     }
 
-    alert("Vente OK");
+    showSyncToast(
+  "📦 Vente  ok",
+  "warning"
+);
 
     cart = [];
     updateCartUI();
