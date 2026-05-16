@@ -1,5 +1,5 @@
 // js/offline.js
-// VERSION FINALE PRO SAFE + GENERIC + ANTI DOUBLE SYNC
+// VERSION FINALE PRO SAFE + GENERIC + ANTI DOUBLE SYNC vrai offline 
 
 import { db } from "./firebase.js";
 
@@ -134,10 +134,10 @@ export function showOfflineWarning() {
 
   div.setAttribute("id", "offline-banner");
 
-   div.textContent =
+  div.textContent =
   "⚠️ Mode hors ligne actif : vérifiez qu’aucune autre caisse n’effectue des ventes afin d’éviter des erreurs de stock lors de la synchronisation.";
-
-   const header =
+    
+    const header =
   document.querySelector("header") ||
   document.querySelector(".header");
 
@@ -209,7 +209,7 @@ div.animate(
     iterations: Infinity
   }
 );
- 
+  
   document.body.appendChild(div);
 
   offlineBanner = div;
@@ -346,39 +346,13 @@ export function addToQueue(action) {
 
 }
 
-/* =========================
-   OFFLINE SALE
-========================= */
+//offline sales autonome risqué  supprimé 
 
-export function saveOfflineSale({
-  cart,
-  sellerId,
-  payment,
-  totalAmount,
-  totalProfit = 0,
-  saleDate = Date.now()
-}) {
-
-  return addToQueue({
-    type: "SALE",
-    data: {
-      cart,
-      sellerId,
-      payment,
-      totalAmount,
-      totalProfit,
-      saleDate,
-      createdAt: Date.now()
-    }
-  });
-
-}
 
 /* =========================
    SYNC
 ========================= */
-
-export async function syncQueue(processSaleOnline) {
+export async function syncQueue(handlers = {}) {
 
   if (isOffline()) {
     console.warn("📴 Sync annulé offline");
@@ -412,70 +386,44 @@ export async function syncQueue(processSaleOnline) {
 
       try {
 
-        switch (action.type) {
+        const handler =
+          handlers[action.type];
 
-          case "SALE": {
+        if (
+          typeof handler !== "function"
+        ) {
 
-            const data = action.data || {};
-
-            const totalAmount =
-              data.totalAmount ??
-              data.cart.reduce(
-                (a, b) => a + (b.qty * b.price),
-                0
-              );
-
-            const totalProfit =
-              data.totalProfit ??
-              data.cart.reduce(
-                (a, b) =>
-                  a + (
-                    (b.price - b.price_buy) * b.qty
-                  ),
-                0
-              );
-
-            const payment = data.payment ?? {
-              payment_status: "paid",
-              amount_paid: totalAmount,
-              amount_remaining: 0,
-              hasDebt: false
-            };
-
-            await processSaleOnline({
-              ...data,
-              offlineActionId: action.id,
-              deviceId: action.deviceId,
-              totalAmount,
-              totalProfit,
-              payment,
-              saleDate: data.saleDate || Date.now()
-            });
-
-            console.log("✅ Vente synchronisée");
-
-            break;
-
-          }
-
-          default:
-
-            console.warn(
-              "⚠️ Action inconnue:",
-              action.type
-            );
+          throw new Error(
+            `Handler manquant: ${action.type}`
+          );
 
         }
 
+        await handler({
+          ...action.data,
+          offlineActionId: action.id,
+          deviceId: action.deviceId
+        });
+
+        console.log(
+          `✅ Sync OK: ${action.type}`
+        );
+
       } catch (err) {
 
-        console.error("❌ Sync erreur:", err);
+        console.error(
+          "❌ Sync erreur:",
+          err
+        );
 
         remaining.push({
           ...action,
-          retryCount: (action.retryCount || 0) + 1,
+          retryCount:
+            (action.retryCount || 0) + 1,
           lastRetryAt: Date.now(),
-          lastError: err?.message || "Erreur inconnue"
+          lastError:
+            err?.message ||
+            "Erreur inconnue"
         });
 
       }
@@ -491,6 +439,7 @@ export async function syncQueue(processSaleOnline) {
   }
 
 }
+
 
 /* =========================
    SERVICE WORKER
@@ -573,5 +522,4 @@ export function setupInstallButton(
 
     }
   );
-
 }
