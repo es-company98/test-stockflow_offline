@@ -460,8 +460,6 @@ export function addToQueue(action) {
 
 }
 
-//offline sales autonome risqué  supprimé 
-
 
 /* =========================
    SYNC
@@ -481,63 +479,70 @@ export async function syncQueue(handlers = {}) {
   isSyncing = true;
 
   try {
-
     const queue = getQueue();
 
-    if (!queue.length) {
-
+    if (!Array.isArray(queue) || !queue.length) {
       console.log("✅ Queue vide");
-
       return;
-
     }
-
-    console.log(`🔄 Sync ${queue.length} action(s)`);
+    console.log(
+      `🔄 Sync ${queue.length} action(s)`
+    );
 
     const remaining = [];
 
     for (const action of queue) {
-
       try {
-
+        if (
+          !action ||
+          typeof action !== "object"
+        ) {
+          continue;
+        }
         const handler =
           handlers[action.type];
 
         if (
           typeof handler !== "function"
         ) {
-
           throw new Error(
             `Handler manquant: ${action.type}`
           );
-
         }
-         await handler({
-      ...action.data,
-      offlineActionId: action.id,
-      deviceId: action.deviceId
-    });
+        if (
+          action.retryCount &&
+          action.retryCount >= 5
+        ) {
+          console.warn(
+            `⛔ Action ignorée: ${action.type}`
+          );
+          continue;
+        }
+        await handler({
+          ...action.data,
+          offlineActionId: action.id,
+          deviceId: action.deviceId
+        });
 
         console.log(
-  `✅ Sync OK: ${action.type}`
-);
+          `✅ Sync OK: ${action.type}`
+        );
 
-showSyncToast(
-  `✅ Sync OK : ${action.type}`,
-  "success"
-);
-
+        showSyncToast(
+          `✅ Sync OK : ${action.type}`,
+          "success"
+        );
       } catch (err) {
 
         console.error(
           "❌ Sync erreur:",
           err
         );
-        
+
         showSyncToast(
-  `❌ Sync erreur : ${action.type}`,
-  "error"
-);
+          `❌ Sync erreur : ${action.type}`,
+          "error"
+        );
 
         remaining.push({
           ...action,
@@ -548,21 +553,13 @@ showSyncToast(
             err?.message ||
             "Erreur inconnue"
         });
-
       }
-
     }
-
     saveQueue(remaining);
-
   } finally {
-
     isSyncing = false;
-
   }
-
 }
-
 
 /* =========================
    SERVICE WORKER
