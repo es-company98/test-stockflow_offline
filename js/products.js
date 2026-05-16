@@ -1,4 +1,4 @@
-// products.js - VERSION FINALE ULTIME PRO + search 
+// products.js - VERSION FINALE ULTIME PRO + search   + vrai OFFLINE 
 import { 
   db, collection, getDocs, addDoc, updateDoc, doc, getDoc, Timestamp
 } from './firebase.js';
@@ -6,8 +6,12 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 
 // --- OFFLINE ---
 import {
+  isOffline,
+  addToQueue,
+  syncQueue,
   setupNetworkListeners,
-  updateNetworkBadge
+  updateNetworkBadge,
+  showSyncToast
 } from "./offline.js";
 
 // --- DOM ---
@@ -57,6 +61,60 @@ function sanitizeText(value, max = 120) {
     .trim()
     .replace(/\s+/g, " ")
     .slice(0, max);
+}
+
+async function processProductCreateOnline(data) {
+
+  const {
+    name,
+    variant,
+    imageUrl,
+    price_buy,
+    price_sell,
+    price_min,
+    stock,
+    offlineBlocked,
+    minOfflineStock,
+    createdBy
+  } = data;
+
+  await checkUser(createdBy);
+
+  const now = Timestamp.now();
+
+  const prodRef = await addDoc(
+    collection(db, "products"),
+    {
+      name,
+      variant,
+      imageUrl: imageUrl || "",
+      category: "default",
+      price_buy,
+      price_sell,
+      price_min,
+      stock_current: stock,
+      offlineBlocked,
+      minOfflineStock,
+      stock_alert: 10,
+      isActive: true,
+      createdAt: now,
+      updatedAt: now
+    }
+  );
+
+  await addDoc(
+    collection(db, "stock_movements"),
+    {
+      productId: prodRef.id,
+      type: "IN",
+      quantity: stock,
+      reason: "initial",
+      referenceId: prodRef.id,
+      createdBy,
+      createdAt: now
+    }
+  );
+
 }
 
 // ------ render
@@ -216,85 +274,151 @@ if (prodSnap.metadata.fromCache) {
 
 // --- ADD PRODUCT ---
 addBtn.addEventListener('click', async () => {
-  const name = sanitizeText(prompt("Nom produit?"));
-  const variant = sanitizeText(prompt("Variante ? (ex: petit, rouge...)"));
-  const imageUrl = sanitizeText(prompt("URL image ?"),500);
-  const price_buy = parseFloat(prompt("Prix achat?"));
-  const price_sell = parseFloat(prompt("Prix vente?"));
-  const price_min = parseFloat(prompt("Prix minimum autorisé?"));
-  const stock = parseInt(prompt("Stock initial?"),10);
-  
+  try {
+    const name =
+      sanitizeText(
+        prompt("Nom produit?")
+      );
 
-  const blocage = sanitizeText(
-  prompt("Autoriser les ventes hors connexion ? (OUI ou NON)"
-  )).toUpperCase();
-  
-  let offlineBlocked = false;
-let minOfflineStock = stock;
+    const variant =
+      sanitizeText(
+        prompt("Variante ?")
+      );
 
-if (blocage === "OUI") {
-  offlineBlocked = false;
+    const imageUrl =
+      sanitizeText(
+        prompt("URL image ?"),
+        500
+      );
 
-  const offlineValue = parseInt(
-    prompt("Valeur minimale autorisée hors connexion ?"),
-    10
-  );
+    const price_buy =
+      parseFloat(
+        prompt("Prix achat?")
+      );
 
-  if (
-  !isNaN(offlineValue) &&
-  offlineValue >= 0 &&
-  offlineValue <= stock
-) {
-    minOfflineStock = offlineValue;
-  }
-} else {
-  offlineBlocked = true;
-}
+    const price_sell =
+      parseFloat(
+        prompt("Prix vente?")
+      );
 
-  if (!name || !variant || isNaN(price_buy) || isNaN(price_sell) || isNaN(stock) || isNaN(price_min)) {
-    return alert("Valeurs invalides");
-  }
-  if (
-  imageUrl &&
-  !/^https?:\/\//i.test(imageUrl)
-) {
-  return alert("URL image invalide");
-}
-  if (price_min <= price_buy) return alert("Prix minimum doit être supérieur au prix d'achat !");
-  if (price_sell < price_min) return alert("Prix vente < prix minimum !");
+    const price_min =parseFloat(prompt("Prix minimum autorisé?"));
 
-  const now = Timestamp.now();
+    const stock =parseInt(prompt("Stock initial?"),10);
 
-  const prodRef = await addDoc(collection(db, "products"), {
-    name,
-    variant,
-    imageUrl: imageUrl || "",
-    category: "default",
-    price_buy,
-    price_sell,
-    price_min,
-    stock_current: stock,
-    offlineBlocked,
-    minOfflineStock,
-    stock_alert: 10,
-    isActive: true,
-    createdAt: now,
-    updatedAt: now
+    const blocage =
+      sanitizeText(
+        prompt(
+          "Autoriser offline ? (OUI/NON)"
+        )
+      ).toUpperCase();
+
+    let offlineBlocked = false;
+    let minOfflineStock = stock;
+
+    if (blocage === "OUI") {
+
+      offlineBlocked = false;
+
+      const offlineValue =
+        parseInt(prompt("Valeur min offline ?"),10);
+      if (
+        !isNaN(offlineValue) &&
+        offlineValue >= 0 &&
+        offlineValue <= stock
+      ) {
+        minOfflineStock =
+          offlineValue;
+      }
+    } else {
+      offlineBlocked = true;
+    }
+
+    if (
+      !name ||
+      !variant ||
+      isNaN(price_buy) ||
+      isNaN(price_sell) ||
+      isNaN(price_min) ||
+      isNaN(stock)
+    ) {
+      throw new Error(
+        "Valeurs invalides"
+      );
+    }
+
+    if (
+      imageUrl &&
+      !/^https?:\/\//i.test(imageUrl)
+    ) {
+      throw new Error(
+        "URL image invalide"
+      );
+    }
+    if (price_min <= price_buy) {
+      throw new Error(
+        "Prix minimum invalide"
+      );
+    }
+
+    if (price_sell < price_min) {
+      throw new Error(
+        "Prix vente invalide"
+      );
+    }
+
+    const payload = {
+      name,
+      variant,
+      imageUrl,
+      price_buy,
+      price_sell,
+      price_min,
+      stock,
+      offlineBlocked,
+      minOfflineStock,
+      createdBy: currentUserId
+    };
+
+    if (isOffline()) {
+  const offlineProduct = {
+    ...payload,
+    id: "offline_" + Date.now(),
+    _offline: true
+  };
+
+  allProducts.unshift(offlineProduct);
+  renderProducts(allProducts);
+
+  addToQueue({
+    type: "PRODUCT_CREATE",
+    data: payload
   });
 
-  // --- STOCK MOVEMENT ---
-  await addDoc(collection(db, "stock_movements"), {
-    productId: prodRef.id,
-    type: "IN",
-    quantity: stock,
-    reason: "initial",
-    referenceId: prodRef.id,
-    createdBy: currentUserId,
-    createdAt: now
-  });
-    
-   debug("✅ Produits Enregistrés");
-   await loadProducts();
+  debug("📦 Produit sauvegardé offline");
+  showSyncToast("📦 Produit sauvegardé offline", "warning");
+
+  return;
+}
+    await processProductCreateOnline(
+      payload
+    );
+    debug(
+      "✅ Produit enregistré"
+    );
+    await loadProducts();
+
+  } catch (err) {
+
+    console.error(err);
+    debug(
+      err?.message ||
+      "Erreur produit"
+    );
+    alert(
+      err?.message ||
+      "Erreur produit"
+    );
+  }
 });
 
 // --- EDIT PRODUCT ---
@@ -417,7 +541,13 @@ onAuthStateChanged(auth, async (user) => {
     currentUserId = user.uid;
     await checkUser(currentUserId);
     
-    setupNetworkListeners();
+    setupNetworkListeners(async () => {
+  await syncQueue({
+    PRODUCT_CREATE:
+      processProductCreateOnline
+  });
+});
+
     updateNetworkBadge(navigator.onLine);
 
     await loadProducts();
@@ -426,3 +556,4 @@ onAuthStateChanged(auth, async (user) => {
     console.error(e);
   }
 });
+  
