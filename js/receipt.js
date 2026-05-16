@@ -5,7 +5,7 @@ import { jsPDF } from "https://esm.sh/jspdf@2.5.1";
 const SHOP_NAME = "ES-SHOP";
 const SHOP_ADDRESS = "Adresse : Rughenda-Kaleverio";
 const SHOP_PHONE = "Tel : +243840344307";
-const logoUrl = "/logo.png";
+const logoUrl = "logo.png";
 
 const MAX_ITEMS_PER_RECEIPT = 18;
 
@@ -96,7 +96,13 @@ function drawReceipt(doc, data, x, y, width, height, logo) {
 
   cursorY += 12;
 
-  doc.text(`Date   : ${formatDate(data.date)}`, x + 10, cursorY);
+  const receiptDate =
+  data.offline
+    ? `${formatDate(data.date)} (OFFLINE)`
+    : formatDate(data.date);
+
+doc.text(`Date   : ${receiptDate}`,x + 10, cursorY
+);
 
   cursorY += 10;
   doc.line(x + 10, cursorY, x + width - 10, cursorY);
@@ -160,7 +166,12 @@ function drawReceipt(doc, data, x, y, width, height, logo) {
 
   const paid = Number(data.amountPaid || data.total);
   const remaining = Number(data.remaining || 0);
-  const status = data.paymentMode === "partial" ? "PAIEMENT PARTIEL" : "PAYÉ";
+  let status =  data.paymentMode === "partial"
+    ? "PAIEMENT PARTIEL"
+    : "PAYÉ";
+if (data.offline) {
+  status += " • OFFLINE";
+}
 
   doc.text(`Payé   : ${paid.toFixed(2)} FC`, x + 10, cursorY);
   cursorY += 10;
@@ -249,4 +260,4 @@ export async function generateReceipt(rawData) {
   ================================= */
   doc.save(`recu_${data.saleId}.pdf`);
 
-}
+        }
