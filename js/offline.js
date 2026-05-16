@@ -512,6 +512,11 @@ export async function syncQueue(handlers = {}) {
           );
 
         }
+         await handler({
+      ...action.data,
+      offlineActionId: action.id,
+      deviceId: action.deviceId
+    });
 
         console.log(
   `✅ Sync OK: ${action.type}`
