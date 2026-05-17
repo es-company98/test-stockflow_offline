@@ -1,4 +1,4 @@
-const CACHE_NAME = "stockflow-v3";
+const CACHE_NAME = "stockflow-v4";
 
 /* =========================
    CORE OFFLINE FILES 
