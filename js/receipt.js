@@ -220,83 +220,55 @@ function drawReceipt(doc, data, logo) {
      LOGO 1:1
   ================================= */
 
-  if (logo) {
+   if (logo) {
 
-    const logoSize = 40;
-    
-    doc.setGState(new doc.GState({ opacity: 0.95 }));
+  const logoSize = 38;
 
-    doc.addImage(
-      logo,
-      "PNG",
-      CENTER - (logoSize / 2),
-      y,
-      logoSize,
-      logoSize
-    );
+  const logoX = LEFT;
+  const logoY = y;
 
-    y += 50;
-
-  }
-
-  /* ================================
-     HEADER
-  ================================= */
-
-  doc.setFont(
-    FONT_FAMILY,
-    "bold"
+  // LOGO (GAUCHE)
+  doc.addImage(
+    logo,
+    "PNG",
+    logoX,
+    logoY,
+    logoSize,
+    logoSize,
+    undefined,
+    "FAST"
   );
 
-  doc.setFontSize(
-    FONT_SIZE_TITLE
-  );
+  // TEXTE À DROITE DU LOGO
+  const textX = logoX + logoSize + 8;
+
+  doc.setFont(FONT_FAMILY, "bold");
+  doc.setFontSize(FONT_SIZE_TITLE);
 
   doc.text(
     SHOP_NAME,
-    CENTER,
-    y,
-    {
-      align: "center"
-    }
+    textX,
+    logoY + 10
   );
 
-  y += 10;
-
-  doc.setFont(
-    FONT_FAMILY,
-    "normal"
-  );
-
-  doc.setFontSize(
-    FONT_SIZE_SMALL
-  );
+  doc.setFont(FONT_FAMILY, "normal");
+  doc.setFontSize(FONT_SIZE_SMALL);
 
   doc.text(
     SHOP_ADDRESS,
-    CENTER,
-    y,
-    {
-      align: "center"
-    }
+    textX,
+    logoY + 20
   );
-
-  y += 8;
 
   doc.text(
     `Tel : ${SHOP_PHONE}`,
-    CENTER,
-    y,
-    {
-      align: "center"
-    }
+    textX,
+    logoY + 30
   );
 
-  y += 12;
-
-  drawSeparator(doc, y);
-
-  y += 12;
+  // avance propre après header
+  y += logoSize + 8;
+}
 
   /* ================================
      INFOS REÇU
