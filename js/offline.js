@@ -478,6 +478,11 @@ export async function syncQueue(handlers = {}) {
 
   isSyncing = true;
 
+   await new Promise(r =>
+  setTimeout(r, 1500)
+);
+
+try {
   try {
     const queue = getQueue();
 
