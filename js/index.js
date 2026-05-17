@@ -14,7 +14,7 @@ import {
   isOffline,
   showOfflineWarning,
   showSyncToast
-} from "./offline.js";
+} from "./offline.js?v=1";
 
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 import { generateReceipt } from "./receipt.js";
