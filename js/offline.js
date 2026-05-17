@@ -479,7 +479,7 @@ export async function syncQueue(handlers = {}) {
   isSyncing = true;
 
    await new Promise(r =>
-  setTimeout(r, 1500)
+  setTimeout(r, 2000)
 );
 
 try {
