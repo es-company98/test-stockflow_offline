@@ -482,7 +482,6 @@ export async function syncQueue(handlers = {}) {
   setTimeout(r, 2000)
 );
 
-try {
   try {
     const queue = getQueue();
 
