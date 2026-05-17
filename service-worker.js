@@ -1,4 +1,4 @@
-const CACHE_NAME = "stockflow-v4";
+const CACHE_NAME = "stockflow-v5";
 
 /* =========================
    CORE OFFLINE FILES 
@@ -53,32 +53,23 @@ self.addEventListener(
           for (const asset of CORE_ASSETS) {
 
             try {
-
               await cache.add(asset);
-
               console.log(
                 "✅ Cached:",
                 asset
               );
 
             } catch (err) {
-
               console.error(
                 "❌ Cache failed:",
                 asset,
                 err
               );
-
             }
-
           }
-
         })
-
     );
-
     self.skipWaiting();
-
   }
 );
 
@@ -89,14 +80,10 @@ self.addEventListener(
 self.addEventListener(
   "activate",
   (event) => {
-
     event.waitUntil(
-
       caches.keys()
         .then((keys) => {
-
           return Promise.all(
-
             keys
               .filter(
                 (key) =>
@@ -106,15 +93,10 @@ self.addEventListener(
                 (key) =>
                   caches.delete(key)
               )
-
           );
-
         })
-
     );
-
     self.clients.claim();
-
   }
 );
 
@@ -130,70 +112,52 @@ self.addEventListener(
       event.request;
 
     /* ---------- Ignore non-GET ---------- */
-
     if (
       request.method !== "GET"
     ) {
       return;
     }
     
-    /* ---------- permit ---------- */
-    
+    /* ---------- permit ---------- */   
     if (
   request.url.startsWith("https://www.gstatic.com") ||
   request.url.startsWith("https://esm.sh")
 ) {
 
   event.respondWith(
-
     caches.open(CACHE_NAME).then(async cache => {
 
       const cached = await cache.match(request);
-
       if (cached) {
         return cached;
       }
 
       try {
-
         const response = await fetch(request);
-
         cache.put(request, response.clone());
-
         return response;
-
       } catch {
-
         return cached;
-
       }
-
     })
-
   );
-
   return;
 }
 
     /* ---------- Firebase ---------- */
 
     if (
-
       request.url.includes(
         "firebase"
       ) ||
-
       request.url.includes(
         "googleapis"
       )
-
     ) {
 
       event.respondWith(
-
         fetch(request)
           .catch(() => {
-
             return new Response(
               null,
               {
@@ -202,30 +166,22 @@ self.addEventListener(
                   "Offline"
               }
             );
-
           })
-
       );
-
       return;
-
     }
 
     /* ---------- Cache First ---------- */
-
     event.respondWith(
-
       caches.match(request)
         .then((cached) => {
 
           if (cached) {
             return cached;
           }
-
           return fetch(request)
 
             .then((response) => {
-
               if (
                 !response ||
                 !response.ok
@@ -240,25 +196,19 @@ self.addEventListener(
                 CACHE_NAME
               )
               .then((cache) => {
-
                 cache.put(
                   request,
                   clone
                 );
-
               });
-
               return response;
-
             })
-
             .catch(async () => {
 
               const offlinePage =
                 await caches.match(
                   "/index.html"
                 );
-
               return (
                 offlinePage ||
 
@@ -272,14 +222,9 @@ self.addEventListener(
                     }
                   }
                 )
-
               );
-
             });
-
         })
-
     );
-
   }
 );
