@@ -28,7 +28,11 @@ form-action 'self' https://wa.me;
 <script type="module" src="js/index.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/nav.js" defer></script>
-
+<script>
+navigator.serviceWorker.getRegistrations().then(rs =>
+  rs.forEach(r => r.unregister())
+);
+</script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
 
