@@ -5,16 +5,25 @@ function isInsideCart(target) {
   return cartDom && cartDom.contains(target);
 }
 
-document.addEventListener('click', (e) => {
+document.addEventListener("click", (e) => {
+
+  if (!cartDom || !toggleCartBtn) {
+    return;
+  }
 
   const target = e.target;
 
-  const clickedInsideCart = isInsideCart(target);
-  const clickedToggleBtn = target === toggleCartBtn || toggleCartBtn?.contains(target);
+  const clickedInsideCart =
+    target.closest(".cart");
 
-  // fermer uniquement si vrai clic extérieur total
-  if (!clickedInsideCart && !clickedToggleBtn) {
-    cartDom?.classList.add('hidden');
+  const clickedToggleBtn =
+    target.closest("#toggleCart");
+
+  if (
+    !clickedInsideCart &&
+    !clickedToggleBtn
+  ) {
+    cartDom.classList.add("hidden");
   }
 
 });
