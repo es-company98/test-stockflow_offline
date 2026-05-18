@@ -351,7 +351,7 @@ function drawReceipt(doc, data, logo) {
     );
 
     doc.text(
-      "MODE HORS LIGNE",
+      "°",
       CENTER,
       y,
       {
