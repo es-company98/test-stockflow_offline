@@ -673,7 +673,7 @@ sellBtn.addEventListener('click', async () => {
 
     const paymentMode = paymentType.value;
 
-    const name = (clientNameInput?.value || "").trim() || "Client inconnu";
+    const name = (clientNameInput?.value || "").trim() || "....................";
 
     const payment = computePayment(
       totalAmount,
@@ -710,7 +710,7 @@ sellBtn.addEventListener('click', async () => {
   try {
 
     await generateReceipt({
-      saleId: `OFFLINE-${Date.now()}`,
+      saleId: `O-${Date.now()}`,
       name,
       items: cart.map(i => ({
         name: i.name,
@@ -749,7 +749,7 @@ sellBtn.addEventListener('click', async () => {
     try {
       await generateReceipt({
         saleId,
-        name: clientNameInput?.value || "Client inconnu",
+        name: clientNameInput?.value || "....................",
         items: cart.map(i => ({
           name: i.name,
           qty: i.qty,
