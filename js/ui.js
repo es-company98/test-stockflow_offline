@@ -1,42 +1,71 @@
-const cartDom = document.querySelector('.cart');
-const toggleCartBtn = document.getElementById('toggleCart');
+const cartDom =
+  document.querySelector(".cart");
 
-function isInsideCart(target) {
-  return cartDom && cartDom.contains(target);
-}
+const toggleCartBtn =
+  document.getElementById("toggleCart");
 
-document.addEventListener("click", (e) => {
+/* ================================
+   OUVRIR / FERMER
+================================ */
 
-  if (!cartDom || !toggleCartBtn) {
-    return;
+toggleCartBtn?.addEventListener(
+  "click",
+  (e) => {
+
+    e.stopPropagation();
+
+    cartDom?.classList.toggle(
+      "hidden"
+    );
+
   }
+);
 
-  const target = e.target;
+/* ================================
+   BLOQUER FERMETURE
+   SI CLICK DANS PANIER
+================================ */
 
-  const clickedInsideCart =
-    target.closest(".cart");
+cartDom?.addEventListener(
+  "pointerdown",
+  (e) => {
 
-  const clickedToggleBtn =
-    target.closest("#toggleCart");
+    e.stopPropagation();
 
-  if (
-    !clickedInsideCart &&
-    !clickedToggleBtn
-  ) {
-    cartDom.classList.add("hidden");
   }
+);
 
-});
+/* ================================
+   FERMETURE EXTERNE
+================================ */
 
-// toggle bouton
-toggleCartBtn?.addEventListener('click', (e) => {
-  e.stopPropagation();
-  cartDom?.classList.toggle('hidden');
-});
+document.addEventListener(
+  "pointerdown",
+  (e) => {
 
-// IMPORTANT:
-// on laisse les interactions internes normales (inputs, boutons)
-// MAIS on bloque seulement le "click global", pas les interactions internes
-cartDom?.addEventListener('click', (e) => {
-  // rien ici → on supprime stopPropagation inutile
-});
+    if (
+      !cartDom ||
+      !toggleCartBtn
+    ) {
+      return;
+    }
+
+    const target = e.target;
+
+    const clickedCart =
+      cartDom.contains(target);
+
+    const clickedToggle =
+      toggleCartBtn.contains(target);
+
+    if (
+      clickedCart ||
+      clickedToggle
+    ) {
+      return;
+    }
+    cartDom.classList.add(
+      "hidden"
+    );
+  }
+);
