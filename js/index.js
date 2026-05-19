@@ -627,7 +627,7 @@ async function processSaleOnline(data) {
   });
 
 });
-  
+
   // =========================
   // 2. ITEMS (HORS TRANSACTION → PLUS RAPIDE)
   // =========================
