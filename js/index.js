@@ -581,43 +581,53 @@ async function processSaleOnline(data) {
   // =========================
   await runTransaction(db, async (tx) => {
 
-    for (const item of cart) {
+  const productSnapshots = [];
 
-      const ref = doc(db, "products", item.productId);
+  // 1. READS ONLY
+  for (const item of cart) {
 
-      // ⚡ plus rapide: pas de logique lourde inutile
-      const snap = await tx.get(ref);
+    const ref = doc(db, "products", item.productId);
 
-      if (!snap.exists()) {
-        throw new Error("Produit supprimé");
-      }
+    const snap = await tx.get(ref);
 
-      const stock = snap.data().stock_current || 0;
+    productSnapshots.push({
+      item,
+      ref,
+      snap
+    });
+  }
 
-      if (stock < item.qty) {
-        throw new Error("Stock insuffisant");
-      }
+  // 2. WRITES ONLY
+  for (const data of productSnapshots) {
 
-      tx.update(ref, {
-        stock_current: stock - item.qty
-      });
+    const {
+      item,
+      ref,
+      snap
+    } = data;
+
+    if (!snap.exists()) {
+      throw new Error("Produit supprimé");
     }
 
-    // SALE minimal dans transaction
-    tx.set(saleRef, {
-      sellerId: finalSellerId,
-      total_amount: totalAmount,
-      total_profit: totalProfit,
-      offlineActionId: offlineActionId || null,
-      deviceId: deviceId || null,
-      syncSource: offlineActionId ? "offline-sync" : "online",
-      status: "active",
-      ...payment,
-      createdAt: Timestamp.fromMillis(saleDate)
-    });
+    const stock =
+      snap.data().stock_current || 0;
 
+    if (stock < item.qty) {
+      throw new Error("Stock insuffisant");
+    }
+
+    tx.update(ref, {
+      stock_current: stock - item.qty
+    });
+  }
+
+  tx.set(saleRef, {
+    ...
   });
 
+});
+  
   // =========================
   // 2. ITEMS (HORS TRANSACTION → PLUS RAPIDE)
   // =========================
