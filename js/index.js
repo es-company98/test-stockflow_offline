@@ -1,6 +1,6 @@
 //v1 index.js FINAL ULTRA PRO + ANTI DOUBLE VENTE + debts logique + manual Stock + muti seller + OFFLINE + manual quantity ( OK )
 import { 
-  db, collection, addDoc, getDoc, doc, updateDoc, Timestamp, getDocs, query, where, enableIndexedDbPersistence, runTransaction, serverTimestamp
+  db, collection, addDoc, getDoc, setDoc, doc, updateDoc, Timestamp, getDocs, query, where, enableIndexedDbPersistence, runTransaction, serverTimestamp
 } from './firebase.js';
  
 import {
