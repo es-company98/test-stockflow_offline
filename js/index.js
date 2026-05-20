@@ -1,4 +1,4 @@
-//v1 index.js FINAL ULTRA PRO + ANTI DOUBLE VENTE + debts logique + manual Stock + muti seller + OFFLINE + manual quantity ( OK )
+//v1 index.js FINAL ULTRA PRO + ANTI DOUBLE VENTE + debts logique + manual Stock + muti seller + OFFLINE + manual quantity + rapide ( OK )
 import { 
   db, collection, addDoc, getDoc, setDoc, doc, updateDoc, Timestamp, getDocs, query, where, enableIndexedDbPersistence, runTransaction, serverTimestamp
 } from './firebase.js';
@@ -623,8 +623,16 @@ async function processSaleOnline(data) {
   }
 
   tx.set(saleRef, {
-    ...
-  });
+  sellerId: finalSellerId,
+  total_amount: totalAmount,
+  total_profit: totalProfit,
+  offlineActionId: offlineActionId || null,
+  deviceId: deviceId || null,
+  syncSource: offlineActionId ? "offline-sync" : "online",
+  status: "active",
+  ...payment,
+  createdAt: Timestamp.fromMillis(saleDate)
+});
 
 });
 
