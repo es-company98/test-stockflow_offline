@@ -28,7 +28,20 @@ body {
   text-align:center;
   box-shadow:0 2px 8px rgba(0,0,0,0.05);
 }
-
+.shortcut {
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:10px 14px;
+    background:#0B5FFF;
+    color:#fff;
+    text-decoration:none;
+    border-radius:8px;
+    font-size:14px;
+    font-weight:600;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+  }
+  
 /* CONTAINER */
 .container {
   max-width:900px;
@@ -269,6 +282,9 @@ nav {
 
 <div class="header">
   <h2>💼 Expenses System</h2>
+  <a  href="#expensesList" class="shortcut">
+  📋 Voir la liste
+  </a>
 </div>
 
 <div class="container">
