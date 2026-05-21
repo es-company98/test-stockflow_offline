@@ -208,7 +208,7 @@ async function loadData() {
   );
 
 firebaseBtn.style.display =
-  allData.length > 500
+  allData.length > 100
     ? "block"
     : "none";
  
