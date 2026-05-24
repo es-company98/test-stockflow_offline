@@ -1,108 +1,219 @@
-const toggleBtn =
-  document.getElementById(
-    "calcToggleBtn"
-  );
+const calcBtn =
+document.getElementById(
+  "calcBtn"
+);
+
+const searchBar =
+document.querySelector(
+  ".search-bar"
+);
 
 let calcOpened = false;
 
+/* =========================
+POSITION BUTTON
+========================= */
+
+function positionCalcBtn(){
+
+  if(
+    !calcBtn ||
+    !searchBar
+  ){
+    return;
+  }
+
+  const rect =
+    searchBar.getBoundingClientRect();
+
+  const topPosition =
+    rect.bottom + 8;
+
+  calcBtn.style.top =
+    `${topPosition}px`;
+
+  calcBtn.style.right =
+    "14px";
+
+  calcBtn.style.left =
+    "auto";
+}
+
+/* =========================
+INIT POSITION
+========================= */
+
+window.addEventListener(
+  "load",
+  positionCalcBtn
+);
+
+window.addEventListener(
+  "resize",
+  positionCalcBtn
+);
+
+window.addEventListener(
+  "scroll",
+  positionCalcBtn,
+  {
+    passive:true
+  }
+);
+
+/* =========================
+OVERLAY
+========================= */
+
 const overlay =
-  document.createElement("div");
+document.createElement("div");
 
 overlay.className =
   "sf-calc-overlay";
 
-overlay.style.position = "fixed";
-overlay.style.inset = "0";
-overlay.style.zIndex = "1400";
-overlay.style.display = "none";
-overlay.style.pointerEvents = "none";
+Object.assign(
+  overlay.style,
+  {
+    position:"fixed",
+    inset:"0",
+    zIndex:"1400",
+    display:"none",
+    pointerEvents:"none"
+  }
+);
 
 document.body.appendChild(
   overlay
 );
 
+/* =========================
+BOX
+========================= */
+
 const box =
-  document.createElement("div");
+document.createElement("div");
 
 box.className =
   "sf-calc-box";
 
-Object.assign(box.style,{
-  position:"fixed",
-  right:"14px",
-  bottom:"190px",
-  width:"320px",
-  maxWidth:"92vw",
-  background:"#fff",
-  borderRadius:"16px",
-  boxShadow:"0 10px 35px rgba(0,0,0,.18)",
-  overflow:"hidden",
-  pointerEvents:"auto",
-  border:"1px solid #ddd"
-});
+Object.assign(
+  box.style,
+  {
+    position:"fixed",
+    right:"14px",
+
+    width:"290px",
+    maxWidth:"90vw",
+
+    background:"#fff",
+
+    borderRadius:"14px",
+
+    boxShadow:
+      "0 10px 35px rgba(0,0,0,.18)",
+
+    overflow:"hidden",
+
+    pointerEvents:"auto",
+
+    border:"1px solid #ddd",
+
+    zIndex:"1450"
+  }
+);
 
 overlay.appendChild(box);
 
 /* =========================
-   HEADER
+POSITION BOX
 ========================= */
 
-const header =
-  document.createElement("div");
+function positionCalcBox(){
 
-Object.assign(header.style,{
-  display:"flex",
-  justifyContent:"space-between",
-  alignItems:"center",
-  padding:"12px",
-  background:"#0B3D2E",
-  color:"#fff",
-  fontWeight:"600"
-});
+  const btnRect =
+    calcBtn.getBoundingClientRect();
+
+  const top =
+    btnRect.bottom + 10;
+
+  box.style.top =
+    `${top}px`;
+
+}
+
+/* =========================
+HEADER
+========================= */
+
+const calcHeader =
+document.createElement("div");
+
+Object.assign(
+  calcHeader.style,
+  {
+    display:"flex",
+    justifyContent:"space-between",
+    alignItems:"center",
+
+    padding:"10px 12px",
+
+    background:"#0B3D2E",
+    color:"#fff",
+
+    fontWeight:"600"
+  }
+);
 
 const title =
-  document.createElement("span");
+document.createElement("span");
 
 title.textContent =
   "Calculatrice";
 
 const closeBtn =
-  document.createElement("button");
+document.createElement("button");
 
-closeBtn.textContent = "✕";
+closeBtn.textContent =
+  "✕";
 
-Object.assign(closeBtn.style,{
-  border:"none",
-  background:"transparent",
-  color:"#fff",
-  cursor:"pointer",
-  fontSize:"18px"
-});
+Object.assign(
+  closeBtn.style,
+  {
+    border:"none",
+    background:"transparent",
+    color:"#fff",
+    cursor:"pointer",
+    fontSize:"16px"
+  }
+);
 
-header.appendChild(title);
-header.appendChild(closeBtn);
+calcHeader.appendChild(title);
+calcHeader.appendChild(closeBtn);
 
-box.appendChild(header);
+box.appendChild(calcHeader);
 
 /* =========================
-   TABS
+TABS
 ========================= */
 
 const tabs =
-  document.createElement("div");
+document.createElement("div");
 
-Object.assign(tabs.style,{
-  display:"flex",
-  gap:"6px",
-  padding:"10px",
-  background:"#f5f5f5"
-});
+Object.assign(
+  tabs.style,
+  {
+    display:"flex",
+    gap:"6px",
+    padding:"8px",
+    background:"#f5f5f5"
+  }
+);
 
 const calcTab =
-  document.createElement("button");
+document.createElement("button");
 
 const rateTab =
-  document.createElement("button");
+document.createElement("button");
 
 calcTab.textContent =
   "Calcul";
@@ -115,14 +226,18 @@ rateTab.textContent =
   rateTab
 ].forEach(btn => {
 
-  Object.assign(btn.style,{
-    flex:"1",
-    padding:"10px",
-    border:"none",
-    borderRadius:"10px",
-    cursor:"pointer",
-    fontWeight:"600"
-  });
+  Object.assign(
+    btn.style,
+    {
+      flex:"1",
+      padding:"9px",
+      border:"none",
+      borderRadius:"10px",
+      cursor:"pointer",
+      fontWeight:"600",
+      fontSize:"13px"
+    }
+  );
 
 });
 
@@ -132,54 +247,64 @@ calcTab.style.background =
 calcTab.style.color =
   "#fff";
 
+rateTab.style.background =
+  "#eee";
+
 tabs.appendChild(calcTab);
 tabs.appendChild(rateTab);
 
 box.appendChild(tabs);
 
 /* =========================
-   CONTENT
+CONTENT
 ========================= */
 
 const content =
-  document.createElement("div");
+document.createElement("div");
 
 content.style.padding =
-  "12px";
+  "10px";
 
 box.appendChild(content);
 
 /* =========================
-   CALCULATOR VIEW
+CALCUL VIEW
 ========================= */
 
 const calcView =
-  document.createElement("div");
+document.createElement("div");
 
 const display =
-  document.createElement("input");
+document.createElement("input");
 
 display.readOnly = true;
 
-Object.assign(display.style,{
-  width:"100%",
-  padding:"14px",
-  fontSize:"20px",
-  border:"1px solid #ddd",
-  borderRadius:"10px",
-  marginBottom:"10px"
-});
+Object.assign(
+  display.style,
+  {
+    width:"100%",
+    padding:"12px",
+    fontSize:"18px",
+    border:"1px solid #ddd",
+    borderRadius:"10px",
+    marginBottom:"10px"
+  }
+);
 
 calcView.appendChild(display);
 
 const grid =
-  document.createElement("div");
+document.createElement("div");
 
-Object.assign(grid.style,{
-  display:"grid",
-  gridTemplateColumns:"repeat(4,1fr)",
-  gap:"8px"
-});
+Object.assign(
+  grid.style,
+  {
+    display:"grid",
+    gridTemplateColumns:
+      "repeat(4,1fr)",
+    gap:"7px"
+  }
+);
 
 const keys = [
   "7","8","9","÷",
@@ -194,8 +319,9 @@ let expression = "";
 function safeCalculate(expr){
 
   const sanitized =
-    expr.replace(/×/g,"*")
-        .replace(/÷/g,"/");
+    expr
+      .replace(/×/g,"*")
+      .replace(/÷/g,"/");
 
   if(
     !/^[0-9+\-*/.() ]+$/
@@ -205,10 +331,13 @@ function safeCalculate(expr){
   }
 
   try{
+
     return Function(
       `"use strict";return (${sanitized})`
     )();
+
   }catch{
+
     return "Erreur";
   }
 }
@@ -216,25 +345,30 @@ function safeCalculate(expr){
 keys.forEach(key => {
 
   const btn =
-    document.createElement("button");
+  document.createElement("button");
 
   btn.textContent = key;
 
-  Object.assign(btn.style,{
-    padding:"14px",
-    border:"none",
-    borderRadius:"10px",
-    background:"#eee",
-    cursor:"pointer",
-    fontSize:"16px"
-  });
+  Object.assign(
+    btn.style,
+    {
+      padding:"12px",
+      border:"none",
+      borderRadius:"10px",
+      background:"#eee",
+      cursor:"pointer",
+      fontSize:"15px"
+    }
+  );
 
   btn.addEventListener(
     "click",
     () => {
 
       if(key === "C"){
+
         expression = "";
+
       }
 
       else if(key === "="){
@@ -247,23 +381,28 @@ keys.forEach(key => {
           );
 
         const amountPaid =
-          document.getElementById(
-            "amountPaid"
-          );
+        document.getElementById(
+          "amountPaid"
+        );
 
         if(amountPaid){
+
           amountPaid.value =
             expression;
+
         }
 
       }
 
       else{
+
         expression += key;
+
       }
 
       display.value =
         expression;
+
     }
   );
 
@@ -274,23 +413,23 @@ keys.forEach(key => {
 calcView.appendChild(grid);
 
 /* =========================
-   RATE VIEW
+RATE VIEW
 ========================= */
 
 const rateView =
-  document.createElement("div");
+document.createElement("div");
 
 rateView.style.display =
   "none";
 
 const rateInput =
-  document.createElement("input");
+document.createElement("input");
 
 const usdInput =
-  document.createElement("input");
+document.createElement("input");
 
 const fcInput =
-  document.createElement("input");
+document.createElement("input");
 
 [
   rateInput,
@@ -298,13 +437,16 @@ const fcInput =
   fcInput
 ].forEach(input => {
 
-  Object.assign(input.style,{
-    width:"100%",
-    padding:"12px",
-    border:"1px solid #ddd",
-    borderRadius:"10px",
-    marginBottom:"10px"
-  });
+  Object.assign(
+    input.style,
+    {
+      width:"100%",
+      padding:"11px",
+      border:"1px solid #ddd",
+      borderRadius:"10px",
+      marginBottom:"10px"
+    }
+  );
 
   input.inputMode =
     "decimal";
@@ -344,12 +486,15 @@ usdInput.addEventListener(
     const rate =
       Number(rateInput.value);
 
-    if(!rate) return;
+    if(!rate){
+      return;
+    }
 
     fcInput.value =
       Math.round(
-        Number(usdInput.value || 0)
-        * rate
+        Number(
+          usdInput.value || 0
+        ) * rate
       );
 
   }
@@ -362,12 +507,15 @@ fcInput.addEventListener(
     const rate =
       Number(rateInput.value);
 
-    if(!rate) return;
+    if(!rate){
+      return;
+    }
 
     usdInput.value =
       (
-        Number(fcInput.value || 0)
-        / rate
+        Number(
+          fcInput.value || 0
+        ) / rate
       ).toFixed(2);
 
   }
@@ -381,7 +529,7 @@ content.appendChild(calcView);
 content.appendChild(rateView);
 
 /* =========================
-   TABS SWITCH
+TABS SWITCH
 ========================= */
 
 calcTab.addEventListener(
@@ -405,6 +553,7 @@ calcTab.addEventListener(
 
     rateTab.style.color =
       "#111";
+
   }
 );
 
@@ -429,19 +578,23 @@ rateTab.addEventListener(
 
     calcTab.style.color =
       "#111";
+
   }
 );
 
 /* =========================
-   OPEN / CLOSE
+OPEN / CLOSE
 ========================= */
 
 function openCalc(){
+
+  positionCalcBox();
 
   overlay.style.display =
     "block";
 
   calcOpened = true;
+
 }
 
 function closeCalc(){
@@ -450,13 +603,14 @@ function closeCalc(){
     "none";
 
   calcOpened = false;
+
 }
 
-toggleBtn.addEventListener(
+calcBtn.addEventListener(
   "click",
-  e => {
+  event => {
 
-    e.stopPropagation();
+    event.stopPropagation();
 
     calcOpened
       ? closeCalc()
@@ -472,20 +626,30 @@ closeBtn.addEventListener(
 
 box.addEventListener(
   "pointerdown",
-  e => e.stopPropagation()
+  event => {
+
+    event.stopPropagation();
+
+  }
 );
 
 document.addEventListener(
   "pointerdown",
-  e => {
+  event => {
 
-    if(!calcOpened) return;
+    if(!calcOpened){
+      return;
+    }
 
     const clickedBox =
-      box.contains(e.target);
+      box.contains(
+        event.target
+      );
 
     const clickedBtn =
-      toggleBtn.contains(e.target);
+      calcBtn.contains(
+        event.target
+      );
 
     if(
       clickedBox ||
