@@ -11,34 +11,8 @@ document.querySelector(
 let calcOpened = false;
 
 /* =========================
-POSITION BUTTON
+POSITION BUTTON supprimé 
 ========================= */
-
-function positionCalcBtn(){
-
-  if(
-    !calcBtn ||
-    !searchBar
-  ){
-    return;
-  }
-
-  const rect =
-    searchBar.getBoundingClientRect();
-
-  const topPosition =
-    rect.bottom + 8;
-
-  calcBtn.style.top =
-    `${topPosition}px`;
-
-  calcBtn.style.right =
-    "14px";
-
-  calcBtn.style.left =
-    "auto";
-}
-
 /* =========================
 INIT POSITION
 ========================= */
