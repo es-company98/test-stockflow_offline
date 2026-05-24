@@ -271,6 +271,25 @@ nav .nav-item.active {
   #installBtn:active {
     transform: scale(0.95);
   }
+    #calcToggleBtn{
+  position:fixed;
+  right:14px;
+  bottom:130px;
+  width:46px;
+  height:46px;
+  border:none;
+  border-radius:50%;
+  background:#0B3D2E;
+  color:#fff;
+  font-size:20px;
+  cursor:pointer;
+  z-index:1200;
+  box-shadow:0 4px 10px rgba(0,0,0,.2);
+}
+
+#calcToggleBtn:active{
+  transform:scale(.95);
+  }
   </style>
 </head>
 
@@ -286,6 +305,9 @@ nav .nav-item.active {
 <div class="search-bar">
   <input type="text" placeholder="Rechercher un produit..." id="searchInput">
 </div>
+<button id="calcToggleBtn" aria-label="Calculatrice">
+  🧮
+</button>
 
 <!-- PRODUITS -->
 <section class="products" id="productsContainer"></section>
@@ -351,6 +373,6 @@ nav .nav-item.active {
   </a>
 
 </nav>
-
+<script type="module" src="js/calcule.js"></script>
 </body>
   </html>
