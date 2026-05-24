@@ -16,7 +16,7 @@ let configLoaded = null;
 
 async function ensureConfig() {
   if (!configLoaded) {
-    configLoaded = await getAppConfig();
+    configLoaded = getAppConfig();
 
     SHOP_NAME = configLoaded.shopName || "shop";
     SHOP_ADDRESS = configLoaded.shopAddress || "-";
@@ -31,11 +31,8 @@ async function ensureConfig() {
 58mm ≈ 164pt
 80mm ≈ 226pt
 */
-
 const TICKET_WIDTH = 226;
-
 const FONT_FAMILY = "courier";
-
 const FONT_SIZE_NORMAL = 8;
 const FONT_SIZE_SMALL = 7;
 const FONT_SIZE_TITLE = 11;
