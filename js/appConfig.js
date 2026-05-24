@@ -49,8 +49,8 @@ export async function getAppConfig(forceRefresh = false) {
       shopName: data.shopName || "Shop",
       shopAddress: data.shopAddress || "",
       shopPhone: data.shopPhone || "",
-      currency: data.currency || "FC",
-      currencySymbol: data.currencySymbol || "FC",
+      currency: data.currency || "$",
+      currencySymbol: data.currencySymbol || "$",
       logoUrl: data.logoUrl || "",
       lowStockLimit: data.lowStockLimit ?? 5,
       enableOffline: data.enableOffline ?? true,
@@ -74,8 +74,8 @@ export async function getAppConfig(forceRefresh = false) {
       shopName: "Shop",
       shopAddress: "",
       shopPhone: "",
-      currency: "FC",
-      currencySymbol: "FC"
+      currency: "$",
+      currencySymbol: "$"
     };
   }
 }
@@ -83,7 +83,6 @@ export async function getAppConfig(forceRefresh = false) {
 /* =========================
    GETTERS SIMPLES (PRO UX)
 ========================= */
-
 export async function getShopName() {
   return (await getAppConfig()).shopName;
 }
