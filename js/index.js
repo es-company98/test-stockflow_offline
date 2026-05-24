@@ -37,7 +37,6 @@ const manualDateCheckbox = document.getElementById('manualDate');
 const saleDateInput = document.getElementById('saleDate');
 const searchInput = document.getElementById('searchInput');
 
-let CURRENCY = "$";
 let CURRENCY_SYMBOL = "$";
 
 //limit sales date
@@ -64,15 +63,12 @@ manualDateCheckbox.addEventListener("change", () => {
 
 });
 
-const cfg = await getAppConfig();
-
-CURRENCY = cfg.currency || "$";
+const cfg = getAppConfig();
 CURRENCY_SYMBOL = cfg.currencySymbol || "$";
 
 // ---- open debts input 
 function togglePaymentInput() {
   const isPartial = paymentType?.value === "partial";
-
   amountPaidInput.style.display = isPartial ? "block" : "none";
 
   if (!isPartial) {
