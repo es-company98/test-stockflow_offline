@@ -1,9 +1,7 @@
-const CACHE_NAME = "stockflow-v5";
-
+const CACHE_NAME = "stockflow1";
 /* =========================
    CORE OFFLINE FILES 
 ========================= */
-
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -24,6 +22,7 @@ const CORE_ASSETS = [
   "/js/ui.js",
   "/js/nav.js",
   "/js/pwa.js",
+  "/js/appConfig.js",
   "/js/receipt.js",
    "/js/offline.js",
   "/js/products.js",
