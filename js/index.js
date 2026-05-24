@@ -871,8 +871,8 @@ onAuthStateChanged(auth, async (user) => {
 
   try {
       await checkUser(currentUserId);
-      await loadProducts();
       await loadCurrencyConfig();
+      await loadProducts();
       await syncQueue({SALE: processSaleOnline});
   } catch(e){
   alert(e.message);
