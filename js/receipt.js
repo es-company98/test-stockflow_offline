@@ -16,13 +16,19 @@ let configLoaded = null;
 
 async function ensureConfig() {
   if (!configLoaded) {
-    configLoaded = getAppConfig();
+    configLoaded =
+      await getAppConfig(true);
+    SHOP_NAME =
+      configLoaded.shopName || "shop";
 
-    SHOP_NAME = configLoaded.shopName || "shop";
-    SHOP_ADDRESS = configLoaded.shopAddress || "-";
-    SHOP_PHONE = configLoaded.shopPhone || "-";
-    logoUrl = configLoaded.logoUrl || "shopLogo.png";
-    CURRENCY_SYMBOL = configLoaded.currencySymbol || "$";
+    SHOP_ADDRESS =
+      configLoaded.shopAddress || "-";
+    SHOP_PHONE =
+      configLoaded.shopPhone || "-";
+    logoUrl =
+      configLoaded.logoUrl || "shopLogo.png";
+    CURRENCY_SYMBOL =
+      configLoaded.currencySymbol || "$";
   }
   return configLoaded;
 }
