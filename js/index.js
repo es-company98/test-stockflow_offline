@@ -39,6 +39,26 @@ const searchInput = document.getElementById('searchInput');
 
 let CURRENCY_SYMBOL = "$";
 
+async function loadCurrencyConfig() {
+
+  try {
+
+    const cfg = await getAppConfig(true);
+
+    CURRENCY_SYMBOL =
+      cfg?.currencySymbol || "$";
+
+    // refresh UI
+    renderProducts(allProducts);
+    updateCartUI();
+
+  } catch (err) {
+
+    console.error(err);
+
+  }
+}
+
 //limit sales date
 const today = new Date().toISOString().split("T")[0];
 saleDateInput.max = today;
@@ -60,11 +80,7 @@ manualDateCheckbox.addEventListener("change", () => {
   if (!manualDateCheckbox.checked) {
     saleDateInput.value = "";
   }
-
 });
-
-const cfg = getAppConfig(true);
-CURRENCY_SYMBOL = cfg.currencySymbol || "$";
 
 // ---- open debts input 
 function togglePaymentInput() {
@@ -856,6 +872,7 @@ onAuthStateChanged(auth, async (user) => {
   try {
       await checkUser(currentUserId);
       await loadProducts();
+    loadCurrencyConfig();
       await syncQueue({SALE: processSaleOnline});
   } catch(e){
   alert(e.message);
