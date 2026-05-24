@@ -872,7 +872,7 @@ onAuthStateChanged(auth, async (user) => {
   try {
       await checkUser(currentUserId);
       await loadProducts();
-    loadCurrencyConfig();
+      await loadCurrencyConfig();
       await syncQueue({SALE: processSaleOnline});
   } catch(e){
   alert(e.message);
