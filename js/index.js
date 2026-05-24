@@ -63,7 +63,7 @@ manualDateCheckbox.addEventListener("change", () => {
 
 });
 
-const cfg = getAppConfig();
+const cfg = getAppConfig(true);
 CURRENCY_SYMBOL = cfg.currencySymbol || "$";
 
 // ---- open debts input 
