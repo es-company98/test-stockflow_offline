@@ -11,31 +11,6 @@ document.querySelector(
 let calcOpened = false;
 
 /* =========================
-POSITION BUTTON supprimé 
-========================= */
-/* =========================
-INIT POSITION
-========================= */
-
-window.addEventListener(
-  "load",
-  positionCalcBtn
-);
-
-window.addEventListener(
-  "resize",
-  positionCalcBtn
-);
-
-window.addEventListener(
-  "scroll",
-  positionCalcBtn,
-  {
-    passive:true
-  }
-);
-
-/* =========================
 OVERLAY
 ========================= */
 
