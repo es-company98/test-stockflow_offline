@@ -1,7 +1,9 @@
 // chart.js
+
 import { Chart } from "https://cdn.jsdelivr.net/npm/chart.js/+esm";
 
 let statsChart = null;
+let isRendering = false;
 
 const chartColors = {
   sales: "#0B3D2E",
@@ -100,8 +102,9 @@ function destroyChart() {
 }
 
 export function renderChart() {
+  if (isRendering) return;
   if (!window.statsData) return;
-
+    isRendering = true;
   const canvas = document.getElementById("statsChart");
   if (!canvas) return;
 
@@ -158,6 +161,7 @@ export function renderChart() {
       }
     }
   });
+  isRendering = false;
 }
 
 function waitStatsData() {
