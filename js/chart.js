@@ -1,20 +1,22 @@
 // chart.js
 import {
   Chart,
+  LineController,
+  LineElement,
+  PointElement,
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
   Title,
   Tooltip,
   Legend
 } from "https://cdn.jsdelivr.net/npm/chart.js/+esm";
 
 Chart.register(
+  LineController,
+  LineElement,
+  PointElement,
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
   Title,
   Tooltip,
   Legend
