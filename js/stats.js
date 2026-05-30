@@ -38,6 +38,39 @@ const auth = getAuth();
 
 
 let debugTimeout = null;
+const dateFrom = document.getElementById("dateFrom");
+const dateTo = document.getElementById("dateTo");
+
+function updateDateLimits(){
+
+  if(!dateFrom || !dateTo) return;
+
+  const today = new Date().toISOString().split("T")[0];
+
+  dateFrom.max = today;
+
+  dateTo.max = today;
+
+  if(dateFrom.value){
+    dateTo.min = dateFrom.value;
+  }else{
+    dateTo.removeAttribute("min");
+  }
+
+  if(
+    dateFrom.value &&
+    dateTo.value &&
+    dateTo.value < dateFrom.value
+  ){
+    dateTo.value = dateFrom.value;
+  }
+
+}
+
+dateFrom?.addEventListener("change", updateDateLimits);
+dateTo?.addEventListener("change", updateDateLimits);
+
+updateDateLimits();
 
 function debug(msg){
   const box = $("debug");
