@@ -11,6 +11,7 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 import { getAppConfig } from "./appConfig.js";
 import { initChart, renderChart } from "./chart.js";
 import { initPdfExport } from "./download.js";
+import { initPdfExportButton } from "./download.js";
 
 const $ = id => document.getElementById(id);
 const n = v => Number(v) || 0;
@@ -887,17 +888,14 @@ async function initializeStats(){
     bindEvents();
     $("dateFrom").disabled = true;
     $("dateTo").disabled = true;
+    initPdfExport(buildPdfPayload);
+    initPdfExportButton();
 
     await loadData();
-
   }catch(error){
-
     console.error(error);
-
     location.replace("404.html");
-
   }
-
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -905,16 +903,11 @@ document.addEventListener("DOMContentLoaded", () => {
   onAuthStateChanged(auth, user => {
 
     if(!user){
-
       location.replace("404.html");
-
       return;
-    }
-
+      }
     initializeStats();
-
   });
-
 });
 
 /* ---------------- PDF HOOK (future) ---------------- */
