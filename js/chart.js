@@ -1,6 +1,24 @@
 // chart.js
+import {
+  Chart,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+} from "https://cdn.jsdelivr.net/npm/chart.js/+esm";
 
-import { Chart } from "https://cdn.jsdelivr.net/npm/chart.js/+esm";
+Chart.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 let statsChart = null;
 let isRendering = false;
