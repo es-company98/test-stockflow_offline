@@ -1,6 +1,5 @@
 // chart.js
-
-import Chart from "https://cdn.jsdelivr.net/npm/chart.js/+esm";
+import { Chart } from "https://cdn.jsdelivr.net/npm/chart.js/+esm";
 
 let statsChart = null;
 
