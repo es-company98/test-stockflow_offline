@@ -37,9 +37,18 @@ const filters = {
 const auth = getAuth();
 
 
+let debugTimeout = null;
+
 function debug(msg){
   const box = $("debug");
-  if(box) box.textContent = msg;
+  if(!box) return;
+
+  box.textContent = msg;
+
+  clearTimeout(debugTimeout);
+  debugTimeout = setTimeout(() => {
+    box.textContent = "";
+  }, 5000);
 }
 
 function bindEvents(){
