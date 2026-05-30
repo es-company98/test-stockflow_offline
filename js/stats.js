@@ -234,6 +234,7 @@ function render(){
   renderProducts();
   renderSellers(sales);
   renderAlerts();
+  renderActivity();
 
   if(state.chartReady) {
   renderChart(); // sync chart.js
