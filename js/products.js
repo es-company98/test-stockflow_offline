@@ -559,9 +559,21 @@ async function deleteProduct(id, name) {
 
   const safeName = sanitizeText(name);
 
-  if (!confirm(`Supprimer définitivement "${safeName}" ?`)) {
-    return;
-  }
+  if (
+  !confirm(
+    `⚠️ DANGER\n\nLe produit sera supprimé définitivement.\n\nCette action ne pourra pas être annulée.`
+  )
+) {
+  return;
+}
+
+if (
+  !confirm(
+    `Êtes-vous absolument certain de vouloir supprimer "${sanitizeText(name)}" ?`
+  )
+) {
+  return;
+}
 
   try {
     await deleteDoc(doc(db, "products", id));
