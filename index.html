@@ -4,9 +4,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0B3D2E">
+  <meta http-equiv="Content-Security-Policy" content="
+default-src 'self';
+script-src 'self' 'unsafe-eval' https://www.gstatic.com https://esm.sh;
+style-src 'self' 'unsafe-inline';
+img-src 'self' data: https:;
+connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.gstatic.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com;
+font-src 'self' https://fonts.gstatic.com;
+frame-src 'self' https://*.firebaseapp.com https://accounts.google.com;
+worker-src 'self' blob:;
+child-src 'self' blob:;
+base-uri 'self';
+form-action 'self' https://wa.me;
+">
   
 <link rel="manifest" href="/manifest.json">
-  <title>StockFlow</title>
+  <title>StockFlow - vente</title>
 
 <script type="module" src="js/index.js" defer></script>
 <script src="js/ui.js" defer></script>
@@ -144,59 +157,110 @@
 
     .sell-btn:active { transform: scale(0.97); }
 
-  nav {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  background: #111;
+    nav{
+  position:fixed;
+  left:0;
+  bottom:0;
 
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  width:100%;
 
-  padding: 6px 10px;
-  gap: 6px;
+  display:flex;
+  justify-content:space-between;
+  align-items:stretch;
+  gap:8px;
 
-  color: white;
-  z-index: 1000;
+  padding:8px 10px calc(8px + env(safe-area-inset-bottom));
 
-  overflow-x: hidden;
-  overflow-y: hidden;
+  background:#111;
+
+  border-top:1px solid rgba(255,255,255,0.08);
+
+  z-index:1000;
+
+  overflow:hidden;
 }
 
-nav .nav-item {
-  flex: 1;
-  min-width: 0;
+nav .nav-item{
+  flex:1;
 
-  text-align: center;
-  font-size: 11px;
-  cursor: pointer;
+  min-width:0;
 
-  padding: 6px 4px;
-  border-radius: 6px;
+  display:flex;
+  flex-direction:column;
 
-  transition: 0.2s;
+  justify-content:center;
+  align-items:center;
 
-  text-decoration: none;
-  color: inherit;
+  gap:4px;
 
-  overflow: hidden;
-  text-overflow: ellipsis;
+  min-height:52px;
 
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  padding:8px 4px;
+
+  border-radius:10px;
+
+  text-decoration:none;
+
+  color:#E5E5E5;
+
+  font-size:11px;
+  font-weight:600;
+
+  text-align:center;
+
+  transition:
+  background 0.2s ease,
+  color 0.2s ease,
+  transform 0.15s ease;
+
+  overflow:hidden;
 }
 
-nav .nav-item:hover {
-  background: rgba(212,175,55,0.08);
+nav .nav-item span{
+  width:100%;
+
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
 }
 
-nav .nav-item.active {
-  color: #D4AF37;
-  font-weight: bold;
-  background: rgba(212,175,55,0.12);
+nav .nav-item:hover{
+  background:rgba(212,175,55,0.08);
 }
+
+nav .nav-item:active{
+  transform:scale(0.96);
+}
+
+nav .nav-item.active{
+  background:rgba(212,175,55,0.12);
+  color:#D4AF37;
+}
+
+@media(min-width:768px){
+
+  nav{
+    max-width:900px;
+
+    left:50%;
+    transform:translateX(-50%);
+
+    border-radius:16px 16px 0 0;
+  }
+
+  nav .nav-item{
+    font-size:12px;
+  }
+
+}
+
+@media(min-width:1200px){
+
+  nav{
+    max-width:1000px;
+  }
+
+  }
 
     .fade-in {
       opacity: 0;
