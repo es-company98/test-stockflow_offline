@@ -12,7 +12,8 @@ script-src
 https://www.gstatic.com
 https://cdn.jsdelivr.net
 https://esm.sh
-'unsafe-inline';
+'unsafe-inline'
+'unsafe-eval';
 
 style-src
 'self'
@@ -35,15 +36,34 @@ data:;
 connect-src
 'self'
 https://firestore.googleapis.com
-https://securetoken.googleapis.com
+securetoken.googleapis.com
 https://identitytoolkit.googleapis.com
 https://firebase.googleapis.com
 https://*.firebaseio.com
 https://*.googleapis.com
 wss://*.firebaseio.com;
+
 frame-src
 'self';
-object-src 'none';
+
+object-src
+'self'
+data:
+blob:;
+
+media-src
+'self'
+data:
+blob:;
+
+worker-src
+'self'
+blob:;
+
+child-src
+'self'
+blob:;
+
 base-uri 'self';
 form-action 'self';
 ">
@@ -964,7 +984,7 @@ nav .nav-item.active{
     📦 Produits
   </a>
 
-  <a href="expenses.html" class="nav-item" data-page="loader.html" id="navQuickView">
+  <a href="loader.html" class="nav-item" data-page="loader.html" id="navQuickView">
     📩 vue rapide
   </a>
 
