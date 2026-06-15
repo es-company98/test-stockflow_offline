@@ -18,7 +18,7 @@ import {
 
 import { getAppConfig } from "./appConfig.js";
 
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "./auth.js";
 import { generateReceipt } from "./receipt.js";
 
 
