@@ -1,6 +1,6 @@
 // signup.js
 import { db, doc, setDoc, Timestamp } from './firebase.js'; // Firestore
-import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js"; // Auth
+import { getAuth, createUserWithEmailAndPassword } from "./auth.js"; // Auth
 
 const auth = getAuth();
 const signupForm = document.getElementById('signupForm');
