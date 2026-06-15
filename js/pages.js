@@ -1,4 +1,4 @@
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "./auth.js"; // Auth
 import { db, collection, getDocs } from "./firebase.js";
 
 /* ================================
