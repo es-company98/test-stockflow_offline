@@ -9,7 +9,7 @@ import {
   setPersistence,
   browserLocalPersistence,
   browserSessionPersistence
-} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+} from "./auth.js"; // Auth
 
 const auth = getAuth();
 
