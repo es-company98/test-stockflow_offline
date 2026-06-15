@@ -6,7 +6,7 @@ import {
   query,
   where
 } from "./firebase.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js"; 
+import { getAuth, onAuthStateChanged } from "./auth.js"; 
 
 import { getAppConfig } from "./appConfig.js";
 import { initChart, renderChart } from "./chart.js";
