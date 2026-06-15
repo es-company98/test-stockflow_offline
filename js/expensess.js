@@ -13,7 +13,7 @@ import {
   runTransaction
 } from "./firebase.js";
 
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "./auth.js";
 import { FILTERS, injectOptions } from "./filter.js";
 
 const auth = getAuth();
